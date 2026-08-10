@@ -1,9 +1,10 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from redis.exceptions import RedisError  # type: ignore[import-untyped]
 
 from cache import CacheService
 from config import Config
+from services import WeatherService
 
 
 class TestCache:
@@ -50,3 +51,26 @@ class TestCache:
         cache = CacheService()
         cache.client.setex = MagicMock(side_effect=RedisError("Write error"))
         cache.set("weather:London", {"temp": 15})
+
+    @patch("services.cache_service")
+    @patch("requests.get")
+    def test_get_weather_cache_hit(self, mock_requests, mock_cache):
+        mock_cache.get.return_value = {"city": "London", "temp": 15}
+        result = WeatherService.get_weather("London", "test_key")
+        assert result == {"city": "London", "temp": 15}
+        mock_cache.get.assert_called_once_with("weather:london")
+        mock_requests.assert_not_called()
+
+    @patch("services.cache_service")
+    @patch("requests.get")
+    def test_get_weather_cache_miss_and_set(self, mock_requests, mock_cache):
+        mock_cache.get.return_value = None
+        mock_requests.return_value.status_code = 200
+        mock_requests.return_value.headers = {"Content-Type": "application/json"}
+        mock_requests.return_value.json.return_value = {"city": "London", "temp": 20}
+        result = WeatherService.get_weather("London", "test_key")
+        assert result == {"city": "London", "temp": 20}
+        mock_cache.get.assert_called_once_with("weather:london")
+        mock_cache.set.assert_called_once_with(
+            "weather:london", {"city": "London", "temp": 20}
+        )
