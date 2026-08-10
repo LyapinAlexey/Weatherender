@@ -13,6 +13,9 @@ class Config:
     DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "yes")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
     DATABASE_URL = os.getenv("DATABASE_URL")
+    REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+    REDIS_TTL = int(os.getenv("REDIS_TTL", 300))  # Time-to-live for cache in seconds
 
     @classmethod
     def validate(cls) -> None:
