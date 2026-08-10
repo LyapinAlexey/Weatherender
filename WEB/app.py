@@ -56,6 +56,15 @@ schema = CityRequestSchema()
 app.secret_key = Config.SECRET_KEY
 
 
+@app.after_request
+def add_security_headers(response):
+    if request.path.startswith(SWAGGER_URL):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' 'unsafe-inline'"
+        )
+    return response
+
+
 @app.teardown_appcontext
 def shutdown_session(exception: BaseException | None = None) -> None:
     db_session = g.pop("db_session", None)
