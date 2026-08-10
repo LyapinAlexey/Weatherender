@@ -37,6 +37,20 @@ logger = logging.getLogger(__name__)
 SWAGGER_URL = "/apidocs"
 API_URL = "/api/apispec.json"
 app = Flask(__name__)
+
+
+# Registered before Talisman: Flask runs after_request hooks in
+# reverse registration order, so this hook must be registered
+# before Talisman to ensure our CSP override is applied last.
+@app.after_request
+def add_security_headers(response):
+    if request.path.startswith(SWAGGER_URL):
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' 'unsafe-inline'"
+        )
+    return response
+
+
 Talisman(app, force_https=False)
 metrics = PrometheusMetrics(app)
 limiter = Limiter(
@@ -54,15 +68,6 @@ app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024  # 1 MB
 Config.validate()
 schema = CityRequestSchema()
 app.secret_key = Config.SECRET_KEY
-
-
-@app.after_request
-def add_security_headers(response):
-    if request.path.startswith(SWAGGER_URL):
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; script-src 'self' 'unsafe-inline'"
-        )
-    return response
 
 
 @app.teardown_appcontext
