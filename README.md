@@ -1,5 +1,8 @@
 # Weather
 
+```text
+It's been developing since I was 13 years old.
+```
 Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices.
 
 ![CI](https://github.com/LyapinAlexey/Weather/actions/workflows/ci.yml/badge.svg)
