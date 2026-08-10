@@ -1,11 +1,11 @@
-<svg width="820" height="640" viewBox="0 0 820 640" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
+<svg width="950" height="640" viewBox="0 0 950 640" xmlns="http://www.w3.org/2000/svg" font-family="Helvetica, Arial, sans-serif">
 <defs>
 <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
 <path d="M2 1L8 5L2 9" fill="none" stroke="#5F5E5A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </marker>
 </defs>
 
-<rect width="820" height="640" fill="#141414"/>
+<rect width="950" height="640" fill="#141414"/>
 
 <rect x="20" y="30" width="280" height="160" rx="16" fill="#232320" stroke="#3a3a36" stroke-width="0.5"/>
 <text x="160" y="52" text-anchor="middle" font-size="14" font-weight="600" fill="#F1EFE8">Testing &amp; CI/CD</text>
@@ -40,8 +40,8 @@
 <text x="750" y="98" text-anchor="middle" font-size="11" fill="#888780">Command line</text>
 <line x1="750" y1="73" x2="750" y2="185" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-<rect x="410" y="185" width="390" height="405" rx="16" fill="#232320" stroke="#3a3a36" stroke-width="0.5"/>
-<text x="605" y="207" text-anchor="middle" font-size="14" font-weight="600" fill="#F1EFE8">Shared modules &amp; business logic</text>
+<rect x="410" y="185" width="520" height="405" rx="16" fill="#232320" stroke="#3a3a36" stroke-width="0.5"/>
+<text x="670" y="207" text-anchor="middle" font-size="14" font-weight="600" fill="#F1EFE8">Shared modules &amp; business logic</text>
 
 <rect x="425" y="225" width="110" height="34" rx="6" fill="#0d3d6e" stroke="#175a9e" stroke-width="0.5"/>
 <text x="480" y="246" text-anchor="middle" font-size="11" fill="#B5D4F4">WEB / app.py</text>
@@ -77,9 +77,13 @@
 <text x="525" y="413" text-anchor="middle" font-size="11" fill="#F0997B">services.py: Weather,</text>
 <text x="525" y="429" text-anchor="middle" font-size="11" fill="#F0997B">geolocation &amp; rate limiting</text>
 
-<rect x="645" y="395" width="130" height="56" rx="6" fill="#5c2510" stroke="#8a3a1c" stroke-width="0.5"/>
-<text x="710" y="413" text-anchor="middle" font-size="11" fill="#F0997B">Talisman / Prometheus</text>
-<text x="710" y="429" text-anchor="middle" font-size="11" fill="#F0997B">security &amp; metrics</text>
+<rect x="645" y="395" width="110" height="56" rx="6" fill="#5c2510" stroke="#8a3a1c" stroke-width="0.5"/>
+<text x="700" y="413" text-anchor="middle" font-size="11" fill="#F0997B">cache.py: Redis</text>
+<text x="700" y="429" text-anchor="middle" font-size="11" fill="#F0997B">TTL cache, fallback</text>
+
+<rect x="775" y="395" width="130" height="56" rx="6" fill="#5c2510" stroke="#8a3a1c" stroke-width="0.5"/>
+<text x="840" y="413" text-anchor="middle" font-size="11" fill="#F0997B">Talisman / Prometheus</text>
+<text x="840" y="429" text-anchor="middle" font-size="11" fill="#F0997B">security &amp; metrics</text>
 
 <line x1="480" y1="259" x2="480" y2="323" stroke="#5F5E5A" stroke-width="1.5" marker-end="url(#arrow)"/>
 <path d="M520 259L575 323" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
@@ -88,7 +92,14 @@
 <path d="M745 259L705 323" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 <path d="M470 373L500 393" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 <path d="M575 373L560 393" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
-<path d="M705 373L710 393" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+<path d="M705 373L840 393" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+<path d="M625 423L645 423" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+<text x="635" y="415" text-anchor="middle" font-size="9" fill="#888780">get/set</text>
+
+<rect x="645" y="490" width="90" height="30" rx="6" fill="#601e37" stroke="#843050" stroke-width="0.5"/>
+<text x="690" y="509" text-anchor="middle" font-size="11" fill="#ED93B1">Redis: TTL store</text>
+<path d="M695 451L690 488" stroke="#5F5E5A" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
 
 <rect x="425" y="490" width="90" height="30" rx="6" fill="#39392f" stroke="#54534a" stroke-width="0.5"/>
 <text x="470" y="509" text-anchor="middle" font-size="11" fill="#D3D1C7">WeatherAPI.com</text>

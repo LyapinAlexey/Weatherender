@@ -24,6 +24,7 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
 - 🧪 45+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
 - 🔌 JSON REST API (`/api/weather`) with interactive Swagger/OpenAPI docs
+- ⚡ Redis caching for WeatherAPI responses (TTL-based, graceful fallback on Redis unavailability)
 - 📊 Prometheus metrics endpoint (`/metrics`) for observability
 - ❤️ Readiness health check (`/health`) with Docker/Compose integration
 - 🔒 Security hardening: secure headers (Talisman), request size limits, User-Agent validation
@@ -38,6 +39,7 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 - **API & Docs:** `apispec`, `flask-swagger-ui` (OpenAPI/Swagger)
 - **Observability:** `prometheus-flask-exporter`, structured JSON logging
 - **Security:** `flask-talisman`
+- **Caching:** `Redis`, `redis-py`
 
 ## Quick Start (Docker)
 
@@ -49,6 +51,7 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 ```bash
    python -c "import secrets; print(secrets.token_hex(32))"
 ```
+
 3. Start the stack:
 ```bash
    docker compose up -d
@@ -76,6 +79,7 @@ Interactive API documentation (Swagger UI) is available at:
 ```url
 http://localhost:5001/apidocs
 ```
+> `/api/weather` responses are cached in Redis for 5 minutes (configurable via `REDIS_TTL`). If Redis is unavailable, the app falls back to fetching fresh data from WeatherAPI directly.
 
 ## Running Tests
 
@@ -86,6 +90,7 @@ docker compose up -d weather_test_db
 DATABASE_URL="postgresql://test_user:test_password@localhost:5433/test_weather_db" alembic upgrade head
 pytest -v
 ```
+Note: `test_cache.py` mocks the Redis client directly and does not require a running Redis instance.
 
 ## Project Structure
 ```text
@@ -99,6 +104,7 @@ Weather/
 ├── alembic/ # DB migrations
 ├── schemas.py # Marshmallow validation
 ├── services.py # Shared weather/geo service layer
+├── cache.py # Redis caching layer (get/set with TTL, graceful fallback)
 ├── models.py # SQLAlchemy models
 ├── config.py # Env-based configuration
 └── docker-compose.yml
