@@ -14,5 +14,8 @@ pre-commit==4.6.0
 mypy==2.3.0
 types-requests==2.33.0.20260712
 types-python-dateutil==2.9.0.20260716
+apispec==6.10.0
+apispec-webframeworks==1.2.0
+flask-swagger-ui==5.32.9
 flask-talisman==1.1.0
 prometheus-flask-exporter==0.23.2

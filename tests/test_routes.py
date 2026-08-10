@@ -106,3 +106,37 @@ class TestRoutes:
         data = response.get_json()
         assert data["status"] == "error"
         assert response.status_code == 503
+
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_index_get_success_return_weather(
+        self, mock_get_weather, client, fake_weather_response
+    ):
+        mock_get_weather.return_value = fake_weather_response
+        response = client.get("/api/weather?city=Berlin")
+        data = response.get_json()
+        assert response.status_code == 200
+        assert "error" not in data
+        assert data["location"]["name"] == "Berlin"
+
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_index_city_not_found(self, mock_get_weather, client):
+        mock_get_weather.return_value = {
+            "error": {"message": "City 'Invalid-city' not found."}
+        }
+        response = client.get("/api/weather?city=Invalid-city")
+        data = response.get_json()
+        assert response.status_code == 404
+        assert "error" in data
+        assert data["error"]["message"] == "City 'Invalid-city' not found."
+
+    def test_api_weather_missing_city_param(self, client):
+        response = client.get("/api/weather")
+        data = response.get_json()
+        assert response.status_code == 400
+        assert data["error"]["city"] == ["Missing data for required field."]
+
+    def test_weather_city_is_none(self, client):
+        response = client.get("/api/weather?city=")
+        data = response.get_json()
+        assert response.status_code == 400
+        assert data["error"]["city"] == ["Length must be between 1 and 100."]

@@ -6,9 +6,14 @@ import logging
 import random
 from datetime import datetime
 
+try:
+    from .api_routes import api_bp, get_weather
+except ImportError:
+    from api_routes import api_bp, get_weather  # type: ignore[no-redef]
 from flask import Flask, g, render_template, request, session
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from flask_swagger_ui import get_swaggerui_blueprint
 from flask_talisman import Talisman
 from marshmallow import ValidationError
 from prometheus_flask_exporter import PrometheusMetrics
@@ -22,9 +27,15 @@ from models import SessionLocal, WeatherRequest
 from schemas import CityRequestSchema
 from services import WeatherService
 
+try:
+    from .swagger_config import spec
+except ImportError:
+    from swagger_config import spec  # type: ignore[no-redef]
+
 setup_logging()
 logger = logging.getLogger(__name__)
-
+SWAGGER_URL = "/apidocs"
+API_URL = "/api/apispec.json"
 app = Flask(__name__)
 Talisman(app, force_https=False)
 metrics = PrometheusMetrics(app)
@@ -33,6 +44,11 @@ limiter = Limiter(
     app=app,
     storage_uri="memory://",
 )
+app.register_blueprint(api_bp)
+swaggerui_bp = get_swaggerui_blueprint(SWAGGER_URL, API_URL)
+app.register_blueprint(swaggerui_bp, url_prefix=SWAGGER_URL)
+with app.test_request_context():
+    spec.path(view=get_weather)
 app.config.from_object(Config)
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024  # 1 MB
 Config.validate()

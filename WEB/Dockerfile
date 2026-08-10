@@ -10,6 +10,8 @@ COPY dbclear.py /app
 COPY logging_config.py /app
 COPY schemas.py /app
 COPY WEB/app.py /app
+COPY WEB/api_routes.py /app
+COPY WEB/swagger_config.py /app
 COPY WEB/static /app/static
 COPY WEB/templates /app/templates
 COPY alembic /app/alembic
