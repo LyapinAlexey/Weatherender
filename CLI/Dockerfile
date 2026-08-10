@@ -11,4 +11,5 @@ COPY schemas.py /main
 COPY CLI/main.py /main
 COPY alembic /main/alembic
 COPY alembic.ini /main
+COPY cache.py /main
 CMD ["python", "main.py"]

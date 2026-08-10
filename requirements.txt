@@ -19,3 +19,5 @@ apispec-webframeworks==1.2.0
 flask-swagger-ui==5.32.9
 flask-talisman==1.1.0
 prometheus-flask-exporter==0.23.2
+redis==8.1.0
+types-redis==4.6.0.20241004

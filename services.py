@@ -2,9 +2,11 @@ import logging
 
 import requests
 
+from cache import CacheService
 from config import Config
 
 logger = logging.getLogger(__name__)
+cache_service = CacheService()
 
 
 class WeatherService:
@@ -35,6 +37,11 @@ class WeatherService:
     @staticmethod
     def get_weather(city: str, api_key: str | None = None) -> dict:
         active_key = api_key or getattr(Config, "WEATHER_API_KEY", None)
+        cache_key = f"weather:{city.strip().lower()}"
+        cached_data = cache_service.get(cache_key)
+        if cached_data:
+            return cached_data
+
         if not active_key:
             return {
                 "error": {
@@ -73,7 +80,9 @@ class WeatherService:
                     }
                 }
             try:
-                return response.json()
+                data = response.json()
+                cache_service.set(cache_key, data)
+                return data
             except ValueError:
                 return {
                     "error": {
