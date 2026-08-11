@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/WEB/templates/index.html" },
+    { "source": "/static/(.*)", "destination": "/WEB/static/$1" }
+  ]
+}
