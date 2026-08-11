@@ -12,18 +12,13 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     def __init__(self) -> None:
-        if not Config.REDIS_HOST or Config.REDIS_HOST in ["127.0.0.1", "cache"]:
-            self.client = None
-        else:
-            self.client = redis.Redis(
-                host=Config.REDIS_HOST,
-                port=Config.REDIS_PORT,
-                decode_responses=True,
-            )
+        self.client: Any = redis.Redis(
+            host=Config.REDIS_HOST,
+            port=Config.REDIS_PORT,
+            decode_responses=True,
+        )
 
     def get(self, key: str) -> Optional[Any]:
-        if self.client is None:
-            return None
         try:
             value = self.client.get(key)
             if value is not None:
@@ -34,14 +29,12 @@ class CacheService:
         return None
 
     def set(self, key: str, value: Any) -> None:
-        if self.client is None:
-            return
         try:
             json_value = json.dumps(value)
-            self.client.setex(
-                key,
-                Config.REDIS_TTL,
-                json_value,
+            self.client.set(
+                name=key,
+                value=json_value,
+                ex=Config.REDIS_TTL,
             )
         except (RedisError, TypeError) as err:
             logger.warning("Failed to set key '%s' in cache: %s", key, err)

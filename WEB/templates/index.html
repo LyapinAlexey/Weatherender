@@ -2,64 +2,51 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My weather</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
 
-    <link rel="shortcut icon" href="static/images/favicon.png" type="image/png">
-    <link rel="stylesheet" href="static/css/style.css">
-    <style>
-
-        .loader {
-            display: none;
-            margin: 20px auto;
-            border: 4px solid #334155;
-            border-top: 4px solid #38bdf8;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .weather-info, .forecast-section, .error { display: none; }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="{{ bg_class }}">
 <div class="card">
     <h1>🌤 Weather Forecast</h1>
-    <div class="time" id="currentTime"></div>
+    <div class="time">Data for: {{ now }}</div>
 
+    <form class="search-form" method="POST">
+        <input type="text" name="city" placeholder="Enter city (e.g., Paris)..." required>
+        <button type="submit">Get Info</button>
+    </form>
 
-    <div class="search-form">
-        <input type="text" id="cityInput" placeholder="Enter city (e.g., Paris)..." required>
-        <button id="searchBtn" type="button">Get Info</button>
-    </div>
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
 
-    <div class="loader" id="loader"></div>
-    <p class="error" id="errorBlock" style="color: #ef4444; font-weight: 600;"></p>
+    {% if weather %}
+        <div class="weather-info">
+            <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
+            <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
+            <p><strong>📝 Condition:</strong> {{ weather.current.condition.text }}</p>
+            <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
+            <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
+            <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
+        </div>
 
-
-    <div class="weather-info" id="weatherInfo">
-        <h2 id="locationTitle"></h2>
-        <p><strong>🌡 Current Temperature:</strong> <span id="currentTemp"></span>°C</p>
-        <p><strong>📝 Condition:</strong> <span id="currentCondition"></span></p>
-        <p><strong>☀️ Current UV Index:</strong> <span id="currentUv"></span></p>
-        <p><strong>⏲ Current Pressure:</strong> <span id="currentPressure"></span> mmHg</p>
-        <p><strong>💧 Humidity:</strong> <span id="currentHumidity"></span>%</p>
-    </div>
-
-
-    <div class="forecast-section" id="forecastSection">
         <h3>⏰ 24-Hour Forecast</h3>
         <div class="table-container">
             <table>
                 <thead>
                     <tr><th>Time</th><th>Temperature</th><th>Precipitation %</th><th>UV Index</th><th>Pressure</th></tr>
                 </thead>
-                <tbody id="hourlyTableBody">
-
+                <tbody>
+                    {% for hour in hourly %}
+                    <tr>
+                        <td><strong>{{ hour.time | first if hour.time is iterable and hour.time is not string else hour.time }}</strong></td>
+                        <td>{{ hour.temp }}°C</td>
+                        <td>{{ hour.precipitation }}%</td>
+                        <td>{{ hour.uv }}</td>
+                        <td>{{ hour.pressure }} mmHg</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -70,103 +57,21 @@
                 <thead>
                     <tr><th>Date</th><th>Avg Temp</th><th>Precipitation (mm)</th><th>Max UV</th><th>Wind Speed</th><th>Gusts</th></tr>
                 </thead>
-                <tbody id="dailyTableBody">
-
+                <tbody>
+                    {% for day in daily %}
+                    <tr>
+                        <td><strong>{{ day.date }}</strong></td>
+                        <td>{{ day.temp }}°C</td>
+                        <td>{{ day.precipitation }} mm</td>
+                        <td>{{ day.uv }}</td>
+                        <td>{{ day.wind }} km/h</td>
+                        <td>{{ day.gust }} km/h</td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
-    </div>
+    {% endif %}
 </div>
-
-<script>
-
-    const BACKEND_URL = 'https://weather-b5e9.onrender.com';
-
-
-    document.getElementById('currentTime').textContent = `Data for: ${new Date().toLocaleString()}`;
-
-    async function getWeather() {
-        const city = document.getElementById('cityInput').value.trim();
-        if (!city) return;
-
-        const loader = document.getElementById('loader');
-        const errorBlock = document.getElementById('errorBlock');
-        const weatherInfo = document.getElementById('weatherInfo');
-        const forecastSection = document.getElementById('forecastSection');
-
-
-        loader.style.display = 'block';
-        errorBlock.style.display = 'none';
-        weatherInfo.style.display = 'none';
-        forecastSection.style.display = 'none';
-
-        try {
-            const response = await fetch(`${BACKEND_URL}?city=${encodeURIComponent(city)}`);
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'City not found or server error');
-            }
-
-
-            document.getElementById('locationTitle').textContent = `${data.location.name}, ${data.location.country}`;
-            document.getElementById('currentTemp').textContent = data.current.temp_c;
-            document.getElementById('currentCondition').textContent = data.current.condition.text;
-            document.getElementById('currentUv').textContent = data.current.uv;
-
-
-            const pressureMm = Math.round(data.current.pressure_mb * 0.750062);
-            document.getElementById('currentPressure').textContent = pressureMm;
-            document.getElementById('currentHumidity').textContent = data.current.humidity;
-
-
-            const hourlyBody = document.getElementById('hourlyTableBody');
-            hourlyBody.innerHTML = '';
-
-            if (data.hourly && Array.isArray(data.hourly)) {
-                data.hourly.forEach(hour => {
-                    const row = `<tr>
-                        <td><strong>${hour.time}</strong></td>
-                        <td>${hour.temp}°C</td>
-                        <td>${hour.precipitation}%</td>
-                        <td>${hour.uv}</td>
-                        <td>${hour.pressure} mmHg</td>
-                    </tr>`;
-                    hourlyBody.innerHTML += row;
-                });
-            }
-
-            const dailyBody = document.getElementById('dailyTableBody');
-            dailyBody.innerHTML = '';
-
-            if (data.daily && Array.isArray(data.daily)) {
-                data.daily.forEach(day => {
-                    const row = `<tr>
-                        <td><strong>${day.date}</strong></td>
-                        <td>${day.temp}°C</td>
-                        <td>${day.precipitation} mm</td>
-                        <td>${day.uv}</td>
-                        <td>${day.wind} km/h</td>
-                        <td>${day.gust} km/h</td>
-                    </tr>`;
-                    dailyBody.innerHTML += row;
-                });
-            }
-
-            loader.style.display = 'none';
-            weatherInfo.style.display = 'block';
-            forecastSection.style.display = 'block';
-
-        } catch (error) {
-            loader.style.display = 'none';
-            errorBlock.textContent = error.message;
-            errorBlock.style.display = 'block';
-        }
-    }
-    document.getElementById('searchBtn').addEventListener('click', getWeather);
-    document.getElementById('cityInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') getWeather();
-    });
-</script>
 </body>
 </html>

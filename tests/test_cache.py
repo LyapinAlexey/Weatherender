@@ -35,11 +35,13 @@ class TestCache:
 
     def test_set_success(self):
         cache = CacheService()
-        cache.client.setex = MagicMock()
+        cache.client.set = MagicMock()
         data = {"temp": 15}
         cache.set("weather:London", data)
-        cache.client.setex.assert_called_once_with(
-            "weather:London", Config.REDIS_TTL, '{"temp": 15}'
+        cache.client.set.assert_called_once_with(
+            name="weather:London",
+            value='{"temp": 15}',
+            ex=Config.REDIS_TTL,
         )
 
     def test_set_type_error(self):
