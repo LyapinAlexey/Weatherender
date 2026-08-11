@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     def __init__(self) -> None:
-        if Config.REDIS_HOST == "127.0.0.1":
+        if not Config.REDIS_HOST or Config.REDIS_HOST in ["127.0.0.1", "cache"]:
             self.client = None
         else:
             self.client = redis.Redis(
