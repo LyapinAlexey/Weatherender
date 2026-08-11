@@ -31,10 +31,11 @@ class CacheService:
     def set(self, key: str, value: Any) -> None:
         try:
             json_value = json.dumps(value)
-            self.client.setex(
-                key,
-                Config.REDIS_TTL,
-                json_value,
+            self.client.set(
+                name=key,
+                value=json_value,
+                ex=Config.REDIS_TTL,
             )
+
         except (RedisError, TypeError) as err:
             logger.warning("Failed to set key '%s' in cache: %s", key, err)
