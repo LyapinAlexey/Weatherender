@@ -18,6 +18,7 @@ COPY alembic /app/alembic
 COPY alembic.ini /app
 COPY bg_class.py /app
 COPY cache.py /app
+ENV PORT=5001
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
-  CMD curl -f http://localhost:5001/health || exit 1
-CMD ["gunicorn", "app:app", "-w", "4", "-b", "0.0.0.0:5001"]
+  CMD curl -f http://localhost:${PORT}/health || exit 1
+CMD gunicorn app:app -w 4 -b 0.0.0.0:${PORT}
