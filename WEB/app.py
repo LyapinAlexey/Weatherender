@@ -91,7 +91,7 @@ def check_user_agent():
 )  # Limit to 25 requests per minute per IP x 4 workers = 100 requests per minute
 def index() -> str:
     if request.method == "HEAD":
-        return "OK"
+        return "", 200  # type: ignore[return-value]
     user_agent = request.headers.get("User-Agent", "").lower()
     if (
         "uptimerobot" in user_agent
@@ -99,7 +99,7 @@ def index() -> str:
         or "headless" in user_agent
         or not user_agent
     ):
-        return "ok"
+        return "", 200  # type: ignore[return-value]
 
     config_api_key = getattr(Config, "WEATHER_API_KEY", None)
     if "db_session" not in g:
