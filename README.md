@@ -84,6 +84,7 @@ The app exposes a JSON REST API alongside the web UI.
 | `/api/apispec.json`  | GET    | Raw OpenAPI 3.0 specification                              |
 | `/health`            | GET    | Readiness check (verifies DB connectivity)                 |
 | `/metrics`           | GET    | Prometheus metrics                                         |
+| `/api/ping`          | GET    | Ping endpoint for uptime monitors (no DB connection)       |
 
 Interactive API documentation (Swagger UI) is available at:
 ```url
