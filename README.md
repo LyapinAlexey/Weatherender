@@ -1,4 +1,4 @@
-# Weather
+# Weathernetic
 
 ```text
 It's been developing since I was 13 years old.
