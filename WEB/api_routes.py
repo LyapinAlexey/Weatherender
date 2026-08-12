@@ -49,6 +49,6 @@ def get_apispec():
     return spec.to_dict()
 
 
-@api_bp.route("/ping", methods=["GET"])
+@api_bp.route("/ping", methods=["GET", "HEAD"])
 def ping() -> tuple[dict[str, str], int]:
     return {"status": "ok"}, 200
