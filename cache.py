@@ -12,9 +12,8 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     def __init__(self) -> None:
-        self.client: Any = redis.Redis(
-            host=Config.REDIS_HOST,
-            port=Config.REDIS_PORT,
+        self.client: Any = redis.from_url(
+            Config.REDIS_URL,
             decode_responses=True,
         )
 

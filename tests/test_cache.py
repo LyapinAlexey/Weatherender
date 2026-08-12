@@ -46,12 +46,12 @@ class TestCache:
 
     def test_set_type_error(self):
         cache = CacheService()
-        cache.client.setex = MagicMock()
+        cache.client.set = MagicMock()
         cache.set("weather:London", {1, 2, 3})
 
     def test_set_redis_error(self):
         cache = CacheService()
-        cache.client.setex = MagicMock(side_effect=RedisError("Write error"))
+        cache.client.set = MagicMock(side_effect=RedisError("Write error"))
         cache.set("weather:London", {"temp": 15})
 
     @patch("services.cache_service")

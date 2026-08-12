@@ -22,7 +22,7 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 - 🚦 Rate limiting (flask-limiter)
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
-- 🧪 45+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
+- 🧪 58+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
 - 🔌 JSON REST API (`/api/weather`) with interactive Swagger/OpenAPI docs
 - ⚡ Redis caching for WeatherAPI responses (TTL-based, graceful fallback on Redis unavailability)
 - 📊 Prometheus metrics endpoint (`/metrics`) for observability
