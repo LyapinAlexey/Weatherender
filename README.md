@@ -121,6 +121,7 @@ This repository strictly adheres to professional enterprise software development
 * **Feature Branching:** Every bug fix, optimization, and component expansion is developed in isolated branches (`feature/*`, `fix/*`) to ensure the `main` branch remains stable and deployable at all times
 * **True Merging:** The project utilizes explicit Merge Commits via the `--no-ff` (No Fast-Forward) strategy to preserve a rich, readable, and non-linear history of architectural iterations
 * **Conventional Commits:** Commit messages are heavily standardized using strict semantic prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `tests:`) to provide transparency in project growth and documentation maintenance
+* **Issue-Driven Post-Mortems:** Real infrastructure incidents and complex bug fixes are rigorously documented in the repository's closed Issues as production post-mortems, tracking root cause analysis and technical resolutions
 
 ## Roadmap & Future Enhancements
 
