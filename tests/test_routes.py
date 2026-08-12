@@ -140,3 +140,9 @@ class TestRoutes:
         data = response.get_json()
         assert response.status_code == 400
         assert data["error"]["city"] == ["Length must be between 1 and 100."]
+
+    def test_ping_endpoint(self, client):
+        """Test that the uptime monitor ping route returns 200 OK without DB side effects"""
+        response = client.get("/api/ping")
+        assert response.status_code == 200
+        assert response.get_json() == {"status": "ok"}
