@@ -26,6 +26,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 🖥 Web interface (Flask) and CLI tool, sharing a common service/model layer
 - 📍 Automatic city detection by IP (with fallback chain: ip-api.com → ipinfo.io)
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
+- 🧹 Automated probabilistic storage rotation (`clear()` triggered on 1% of web requests) to safely stay within DB storage limits
 - ✅ Input validation with Marshmallow
 - 🚦 Rate limiting (flask-limiter)
 - 🐳 Fully containerized with Docker Compose
@@ -37,6 +38,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - ❤️ Readiness health check (`/health`) with Docker/Compose integration
 - 🔒 Security hardening: secure headers (Talisman), request size limits, User-Agent validation
 - 📝 Structured JSON logging
+- ☁️ Production Cloud Deployment: Hosted on Render, integrated with Supabase (PostgreSQL) and Upstash (Redis), featuring an automated heartbeat worker (`UptimeRobot`) to maintain 24/7 web service availability
 
 ### Tech Stack
 
@@ -85,12 +87,17 @@ The app exposes a JSON REST API alongside the web UI.
 | `/health`            | GET    | Readiness check (verifies DB connectivity)                 |
 | `/metrics`           | GET    | Prometheus metrics                                         |
 | `/api/ping`          | GET    | Ping endpoint for uptime monitors (no DB connection)       |
+| `/apidocs`           | GET    | Interactive Swagger/OpenAPI documentation                  |
 
-Interactive API documentation (Swagger UI) is available at:
-```url
-http://localhost:5001/apidocs
-```
 > `/api/weather` responses are cached in Redis for 5 minutes (configurable via `REDIS_TTL`). If Redis is unavailable, the app falls back to fetching fresh data from WeatherAPI directly.
+
+## Performance & Caching Strategy
+
+To ensure high performance and minimize reliance on external services, the application implements a multi-layered caching and optimization architecture:
+
+* **Redis Integration:** Weather data fetched from WeatherAPI is cached in an Upstash Redis instance with a 5-minute TTL (`REDIS_TTL`). Subsequent requests for the same city are served instantly from the cache, saving external API quotas
+* **Graceful Degradation:** If the Redis instance becomes temporarily unavailable, the application automatically catches the exception and gracefully falls back to direct API fetching without disrupting the user experience
+* **Database Efficiency:** The automated uptime monitor triggers a lightweight `/api/ping` route that does not open SQLAlchemy sessions or hit the database. This prevents creating redundant connections on the free Supabase tier, keeping the connection pool clean
 
 ## Running Tests
 
