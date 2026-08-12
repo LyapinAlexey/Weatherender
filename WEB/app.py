@@ -85,7 +85,7 @@ def check_user_agent():
         return {"error": "User-Agent header required"}, 400
 
 
-@app.route("/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST", "HEAD"])
 @limiter.limit(
     "25 per minute"
 )  # Limit to 25 requests per minute per IP x 4 workers = 100 requests per minute
