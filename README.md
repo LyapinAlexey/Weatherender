@@ -12,6 +12,14 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
   https://codecov.io/github/LyapinAlexey/Weather
 )
 
+## 🌐 Live Demo
+
+**[weather-7icc.onrender.com](https://weather-7icc.onrender.com)**
+
+> Hosted on Render free tier — spins down after 15 min of inactivity, so the first request may take 30–50s to wake up.
+
+Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
+
 ## Features
 
 - 🌦 Current weather + 3-day forecast via [WeatherAPI](https://www.weatherapi.com/)
@@ -42,6 +50,8 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 - **Caching:** `Redis`, `redis-py`
 
 ## Quick Start (Docker)
+
+> Prefer not to run it locally? Try the [live demo](#-live-demo) above.
 
 1. Clone the repo and copy the environment template:
 ```bash
