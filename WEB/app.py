@@ -79,6 +79,8 @@ def shutdown_session(exception: BaseException | None = None) -> None:
 
 @app.before_request
 def check_user_agent():
+    if request.path == "/ping" or request.path == "/api/ping":
+        return
     if not request.headers.get("User-Agent"):
         return {"error": "User-Agent header required"}, 400
 
