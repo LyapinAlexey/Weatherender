@@ -16,9 +16,14 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 
 **[weather-7icc.onrender.com](https://weather-7icc.onrender.com)**
 
-> Hosted on Render free tier — spins down after 15 min of inactivity, so the first request may take 30–50s to wake up.
+> ⚡ **Infrastructure Note:** Hosted on the Render free tier. To bypass the default 15-minute spin-down restriction, the application is kept active via a dedicated background automated worker (UptimeRobot) targeting the lightweight database-free `/api/ping` endpoint every 10 minutes. 
+
+### Availability and Known Limitations:
+* **Cold Starts:** Despite the cron-ping system, occasional "cold starts" (30–50s delays) may still occur due to Render's internal container recycling or rare service interruptions.
+* **Database Pauses:** The production storage operates on a free Supabase instance. If the database receives absolutely no client traffic for 7+ consecutive days, Supabase will automatically pause the project. If this occurs, feel free to open an issue to request a manual wake-up.
 
 Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
+
 
 ## Features
 
