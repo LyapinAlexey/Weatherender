@@ -147,8 +147,19 @@ def index() -> str:
     if not city:
         user_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
         city = WeatherService.get_city_by_ip(user_ip)
+        if city == "Robot-Datacenter":
+            city = "London"
+            robot_data = WeatherService.get_weather(city, api_key=active_api_key)
+            return render_template(
+                "index.html",
+                weather=robot_data,
+                city=city,
+                bg_class="sunny",
+                now=datetime.now().strftime("%Y-%m-%d %H:%M"),
+                needs_key=False,
+            )
         if not city:
-            city = "Moscow"
+            city = "London"
     data = WeatherService.get_weather(city, api_key=active_api_key)
     if "error" in data:
         logger.warning(

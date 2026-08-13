@@ -20,18 +20,35 @@ class WeatherService:
             geo_resp = requests.get(f"http://ip-api.com/json/{ip_address}", timeout=3)
             if geo_resp.status_code == 200:
                 data = geo_resp.json()
-                if data.get("status") == "success" and data.get("city"):
-                    return str(data.get("city"))
+                if data.get("status") == "success":
+                    provider = (
+                        str(data.get("org", "")) + " " + str(data.get("as", ""))
+                    ).lower()
+                    if (
+                        "google" in provider
+                        or "render" in provider
+                        or "amazon" in provider
+                    ):
+                        return "Robot-Datacenter"
+
+                    if data.get("city"):
+                        return str(data.get("city"))
         except Exception as e:
             logger.error(f"IP-API Error: {e}")
         try:
             response = requests.get(f"https://ipinfo.io/{ip_address}/json", timeout=3)
             if response.status_code == 200:
                 data = response.json()
+                # Вытаскиваем провайдера
+                provider = str(data.get("org", "")).lower()
+                if "google" in provider or "render" in provider or "amazon" in provider:
+                    return "Robot-Datacenter"
+
                 if data.get("city"):
                     return str(data.get("city"))
         except Exception as e:
             logger.error(f"Ipinfo Error: {e}")
+
         return "London"  # default city if all else fails
 
     @staticmethod
