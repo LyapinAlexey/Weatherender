@@ -17,6 +17,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      deployments: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Create .env file
@@ -76,3 +79,6 @@ jobs:
       - name: Check Docker Logs
         run: docker compose logs
         if: always()
+      - name: Trigger Render Production Deployment
+        run: |
+          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
