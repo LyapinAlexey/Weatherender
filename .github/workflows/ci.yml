@@ -79,6 +79,8 @@ jobs:
       - name: Check Docker Logs
         run: docker compose logs
         if: always()
-      - name: Trigger Render Production Deployment
-        run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
+      - name: Deploy to Render Production
+        uses: sws2apps/render-deployment@main
+        with:
+          serviceId: ${{ secrets.RENDER_SERVICE_ID }}
+          apiKey: ${{ secrets.RENDER_API_KEY }}
