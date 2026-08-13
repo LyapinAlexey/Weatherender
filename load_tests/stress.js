@@ -5,9 +5,11 @@ const cities = ["London", "Miami", "New York", "Tokio", "Berlin", "Zurich"];
 
 export const options = {
     stages: [
-        { duration: "20s", target: 10 },
-        { duration: "1m", target: 10 },
-        { duration: "20s", target: 0 },
+        { duration: "30s", target: 10 },
+        { duration: "30s", target: 20 },
+        { duration: "30s", target: 30 },
+        { duration: "30s", target: 40 },
+        { duration: "30s", target: 0 },
     ],
 };
 
@@ -46,6 +48,5 @@ export default function () {
         });
         sleep(1);
     });
-
 
 }
