@@ -21,3 +21,4 @@ flask-talisman==1.1.0
 prometheus-flask-exporter==0.23.2
 redis==8.1.0
 types-redis==4.6.0.20241004
+gevent==26.8.0
