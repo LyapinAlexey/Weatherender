@@ -122,6 +122,7 @@ This repository strictly adheres to professional enterprise software development
 * **True Merging:** The project utilizes explicit Merge Commits via the `--no-ff` (No Fast-Forward) strategy to preserve a rich, readable, and non-linear history of architectural iterations
 * **Conventional Commits:** Commit messages are heavily standardized using strict semantic prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `tests:`) to provide transparency in project growth and documentation maintenance
 * **Issue-Driven Post-Mortems:** Real infrastructure incidents and complex bug fixes are rigorously documented in the repository's closed Issues as production post-mortems, tracking root cause analysis and technical resolutions
+* **Automated CI/CD & Safe Deployment:** Completely automated integration via GitHub Actions. The workflow forces strict validation layers (Ruff linting, Mypy type-checking, and full Pytest execution) before triggering a production release. Automated deployment via Render Webhooks is strictly gated and will automatically block if any unit test or linting check fails, ensuring 100% production uptime and stability.
 
 ## Roadmap & Future Enhancements
 
