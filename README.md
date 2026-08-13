@@ -1,8 +1,5 @@
 # Weathernetic
 
-```text
-It's been developing since I was 13 years old.
-```
 Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices.
 
 ![CI](https://github.com/LyapinAlexey/Weather/actions/workflows/ci.yml/badge.svg)
@@ -16,7 +13,7 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 
 **[weather-7icc.onrender.com](https://weather-7icc.onrender.com)**
 
-> ⚡ **Infrastructure Note:** Hosted on the Render free tier. To bypass the default 15-minute spin-down restriction, the application is kept active via a dedicated background automated worker (UptimeRobot) targeting the lightweight database-free `/api/ping` endpoint every 10 minutes.
+> ⚡ **Infrastructure Note:** Hosted on the Render free tier. To bypass the default 15-minute spin-down restriction, the application is kept active via a dedicated background automated worker ([UptimeRobot](https://uptimerobot.com/)) targeting the lightweight database-free `/api/ping` endpoint every 10 minutes.
 
 ### Availability and Known Limitations:
 * **Cold Starts:** Despite the cron-ping system, occasional "cold starts" (30–50s delays) may still occur due to Render's internal container recycling or rare service interruptions.
@@ -43,7 +40,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - ❤️ Readiness health check (`/health`) with Docker/Compose integration
 - 🔒 Security hardening: secure headers (Talisman), request size limits, User-Agent validation
 - 📝 Structured JSON logging
-- ☁️ Production Cloud Deployment: Hosted on Render, integrated with Supabase (PostgreSQL) and Upstash (Redis), featuring an automated heartbeat worker (`UptimeRobot`) to maintain 24/7 web service availability
+- ☁️ Production Cloud Deployment: Hosted on Render, integrated with Supabase (PostgreSQL) and Upstash (Redis), featuring an automated heartbeat worker ([UptimeRobot](https://uptimerobot.com/)) to maintain 24/7 web service availability
 
 ### Tech Stack
 
@@ -126,16 +123,15 @@ This repository strictly adheres to professional enterprise software development
 
 ## Roadmap & Future Enhancements
 
-As an active alpine skier (currently holding the 2nd adult sports rank and training for the 1st) and a full-time student at **Gymnasium 1514**, my development velocity will temporarily transition into a maintenance phase during the winter season. However, the next major architectural evolution of **Weathernetic** is fully planned:
+The next major architectural evolution of **Weathernetic** is fully planned:
 
 - [ ] **Ski & Snow Analytics:** Implement a specialized service layer to track real-time ski resort data, including snow depth, snow quality, and freezing levels optimized for alpine sports
 - [ ] **Dynamic Radar Maps:** Integrate interactive precipitation radar and dynamic weather maps using GIS/Leaflet tools to visualize snow and rain fronts
 - [ ] **Asynchronous API v2 (FastAPI Migration):** Design a high-performance `api/v2` microservice using **FastAPI** and asynchronous drivers (`asyncio`, `asyncpg`) to dramatically increase request throughput and study async patterns
 - [ ] **User Authentication & Custom Alerts:** Implement secure JWT or session-based user authentication via Supabase Auth, allowing skiers to save favorite resorts and customize automated notification limits
 
-### Current Status & Maintenance Notice
-* **Active Maintenance Mode:** Due to intensive academic tracking at Gymnasium 1514 and a demanding winter training schedule on the ski slopes, new feature deployment will slow down for the upcoming semester
-* **Project Stability:** The application is currently in a fully stable, containerized, and production-grade state with 96% test coverage. It will remain active and autonomously maintained in the cloud. Full-scale feature development will resume during the next summer cycle
+### Project Stability
+The application is currently in a fully stable, containerized, and production-grade state. It will remain active and autonomously maintained in the cloud.
 
 ## Project Structure
 ```text
@@ -158,3 +154,13 @@ Weather/
 ## Project architecture
 
 ![Project architecture](docs/architecture.svg)
+
+---
+
+## About the Author
+
+```text
+Weathernetic has been in the developing since I was 13
+```
+
+I'm an active alpine skier (currently holding the 2nd adult sports rank and training for the 1st) and a full-time student at **Gymnasium 1514**. Due to intensive academic tracking and a demanding winter training schedule on the ski slopes, my development velocity temporarily transitions into a maintenance phase during the winter season — full-scale feature development resumes during the next summer cycle.
