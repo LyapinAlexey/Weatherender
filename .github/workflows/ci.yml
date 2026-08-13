@@ -79,18 +79,6 @@ jobs:
       - name: Check Docker Logs
         run: docker compose logs
         if: always()
-      - name: Trigger Render & Track Deployment Status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trigger Render Deployment
         run: |
-          DEPLOY_ID=$(gh api repos/${{ github.repository }}/deployments \
-            -f ref="${{ github.sha }}" \
-            -f environment="render-production" \
-            -q '.id')
-
           curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
-
-          gh api repos/${{ github.repository }}/deployments/$DEPLOY_ID/statuses \
-            -f state="success" \
-            -f environment_url="https://onrender.com" \
-            -f log_url="https://github.com{{ github.repository }}/actions/runs/${{ github.run_id }}"
