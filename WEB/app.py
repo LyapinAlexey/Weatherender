@@ -1,3 +1,7 @@
+from psycogreen.gevent import patch_psycopg
+
+patch_psycopg()
+
 import os
 import sys
 
