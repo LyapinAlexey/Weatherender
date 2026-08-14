@@ -1,4 +1,4 @@
-# Weathernetic
+# Weatherender
 
 Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices.
 
