@@ -40,11 +40,12 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - ❤️ Readiness health check (`/health`) with Docker/Compose integration
 - 🔒 Security hardening: secure headers (Talisman), request size limits, User-Agent validation
 - 📝 Structured JSON logging
+- 🚀 Load-tested with [k6](https://k6.io/) (smoke, load, stress, spike) — see [`docs/performance.md`](docs/performance.md)
 - ☁️ Production Cloud Deployment: Hosted on Render, integrated with Supabase (PostgreSQL) and Upstash (Redis), featuring an automated heartbeat worker ([UptimeRobot](https://uptimerobot.com/)) to maintain 24/7 web service availability
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `Flask`, `Gunicorn`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
+- **Backend:** `Python 3.13`, `Flask`, `Gunicorn` (gevent workers + `psycogreen`), `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`
@@ -101,6 +102,10 @@ To ensure high performance and minimize reliance on external services, the appli
 * **Graceful Degradation:** If the Redis instance becomes temporarily unavailable, the application automatically catches the exception and gracefully falls back to direct API fetching without disrupting the user experience
 * **Database Efficiency:** The automated uptime monitor triggers a lightweight `/api/ping` route that does not open SQLAlchemy sessions or hit the database. This prevents creating redundant connections on the free Supabase tier, keeping the connection pool clean
 
+## Performance Testing
+
+The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/performance.md`](docs/performance.md). Scripts live in `load-tests/`.
+
 ## Running Tests
 
 Tests require a dedicated PostgreSQL test container (kept separate from the dev/prod database):
@@ -142,6 +147,9 @@ Weather/
 │   └── logging_config.py # Structured JSON logging setup
 ├── CLI/ # CLI tool
 ├── tests/ # pytest suite
+├── load-tests/ # k6 scripts (smoke, load, stress, spike) — see docs/performance.md
+├── docs/
+│   └── performance.md # Load testing methodology & results
 ├── alembic/ # DB migrations
 ├── schemas.py # Marshmallow validation
 ├── services.py # Shared weather/geo service layer
@@ -160,7 +168,7 @@ Weather/
 ## About the Author
 
 ```text
-Weathernetic has been in the developing since I was 13
+It's been developing since I was 13 years old.
 ```
 
 I'm an active alpine skier (currently holding the 2nd adult sports rank and training for the 1st) and a full-time student at **Gymnasium 1514**. Due to intensive academic tracking and a demanding winter training schedule on the ski slopes, my development velocity temporarily transitions into a maintenance phase during the winter season — full-scale feature development resumes during the next summer cycle.
