@@ -2,14 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Weatherneric</title>
+    <title>Weatherender</title>
+    <meta name="description" content="Production-grade weather application with a Flask web UI and CLI tool, featuring Redis caching, PostgreSQL persistence, and fully automated Docker/CI workflows">
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body class="{{ bg_class }}">
 <div class="card">
-    <h1>🌤 Weathernetic forecast</h1>
+    <h1>🌤 Weatherender forecast</h1>
     <div class="time">Data for: {{ now }}</div>
 
     <form class="search-form" method="POST">
