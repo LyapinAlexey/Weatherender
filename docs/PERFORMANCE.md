@@ -6,7 +6,7 @@ Load testing is done with [k6](https://k6.io/). Scripts live in `load-tests/`.
 
 Two environments are used, on purpose:
 
-- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure or tripping the rate limiter (15 req/min per worker).
+- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure or tripping the web route's rate limiter (`25 per minute` per IP, on `/` only — the `/api/*` routes hit by these scripts aren't currently rate-limited).
 - **Stress & spike tests** run only **locally** against `docker-compose` (`localhost:5001`), where nothing is rate-limited or resource-capped by a third party. This is where the application is deliberately pushed past its limits.
 
 | Script         | Target             | VUs (peak) | Purpose                                      |
@@ -107,11 +107,11 @@ Nearly identical to the stress test's numbers at a similar VU count. **The appli
 
 ```bash
 # Smoke & load — against the live Render deployment
-k6 run load_tests/smoke.js
-k6 run load_tests/load.js
+k6 run load-tests/smoke.js
+k6 run load-tests/load.js
 
 # Stress & spike — local only, requires docker-compose running
 docker-compose up -d
-k6 run load_tests/stress.js
-k6 run load_tests/spike.js
+k6 run load-tests/stress.js
+k6 run load-tests/spike.js
 ```

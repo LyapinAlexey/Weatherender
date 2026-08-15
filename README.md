@@ -2,11 +2,11 @@
 
 Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices.
 
-![CI](https://github.com/LyapinAlexey/Weather/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
-[![codecov](https://codecov.io/github/LyapinAlexey/Weather/graph/badge.svg?token=VIAZVWQ81B)](
-  https://codecov.io/github/LyapinAlexey/Weather
+[![codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](
+  https://codecov.io/github/LyapinAlexey/Weatherender
 )
 
 ## 🌐 Live Demo
@@ -125,11 +125,10 @@ This repository strictly adheres to professional enterprise software development
 * **Conventional Commits:** Commit messages are heavily standardized using strict semantic prefixes (`feat:`, `fix:`, `docs:`, `refactor:`, `tests:`) to provide transparency in project growth and documentation maintenance
 * **Issue-Driven Post-Mortems:** Real infrastructure incidents and complex bug fixes are rigorously documented in the repository's closed Issues as production post-mortems, tracking root cause analysis and technical resolutions
 * **Automated CI/CD & Safe Deployment:** Completely automated integration via GitHub Actions. The workflow forces strict validation layers (Ruff linting, Mypy type-checking, and full Pytest execution) before triggering a production release. Automated deployment via Render Webhooks is strictly gated and will automatically block if any unit test or linting check fails, ensuring 100% production uptime and stability.
-* **Security & Responsible Disclosure:** Security practices, header hardening, rate limiting, and vulnerability reporting protocols are documented in [`SECURITY.md`](SECURITY.md).
 
 ## Roadmap & Future Enhancements
 
-The next major architectural evolution of **Weathernetic** is fully planned:
+The next major architectural evolution of **Weatherender** is fully planned:
 
 - [ ] **Ski & Snow Analytics:** Implement a specialized service layer to track real-time ski resort data, including snow depth, snow quality, and freezing levels optimized for alpine sports
 - [ ] **Dynamic Radar Maps:** Integrate interactive precipitation radar and dynamic weather maps using GIS/Leaflet tools to visualize snow and rain fronts
@@ -139,17 +138,32 @@ The next major architectural evolution of **Weathernetic** is fully planned:
 ### Project Stability
 The application is currently in a fully stable, containerized, and production-grade state. It will remain active and autonomously maintained in the cloud.
 
-## 📐 Architecture & Project Structure
+## Project Structure
+```text
+Weather/
+├── WEB/ # Flask web app
+|   ├── api_routes.py    # JSON API routes (/api/weather, /api/apispec.json)
+│   ├── swagger_config.py # OpenAPI spec configuration
+│   └── logging_config.py # Structured JSON logging setup
+├── CLI/ # CLI tool
+├── tests/ # pytest suite
+├── load-tests/ # k6 scripts (smoke, load, stress, spike) — see docs/performance.md
+├── docs/
+│   └── performance.md # Load testing methodology & results
+├── alembic/ # DB migrations
+├── schemas.py # Marshmallow validation
+├── services.py # Shared weather/geo service layer
+├── cache.py # Redis caching layer (get/set with TTL, graceful fallback)
+├── models.py # SQLAlchemy models
+├── config.py # Env-based configuration
+└── docker-compose.yml
+```
 
-> 📐 **Architectural Overview:** For an in-depth breakdown of core services, Redis caching logic, database connection management, and infrastructure setup, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+## Project architecture
 
 ![Project architecture](docs/architecture.svg)
 
-## 🛡️ Security & Community Standards
-
-> 🔒 **Security Policy:** To report a security vulnerability or review production safeguards, refer to [`SECURITY.md`](SECURITY.md).
-
-> 🤝 **Code of Conduct:** We are committed to an open, inclusive, and harassment-free environment. See [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) for participation guidelines.
+---
 
 ## About the Author
 
