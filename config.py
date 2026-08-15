@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+temp_database_url = os.getenv("DATABASE_URL")
+
 
 class Config:
     WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
@@ -12,7 +14,11 @@ class Config:
     SECRET_KEY = os.getenv("SECRET_KEY", "default-fallback-key")
     DEBUG = os.getenv("FLASK_DEBUG", "True").lower() in ("true", "1", "yes")
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-    DATABASE_URL = os.getenv("DATABASE_URL")
+    DATABASE_URL = (
+        temp_database_url.replace("postgres://", "postgresql://", 1)
+        if temp_database_url
+        else temp_database_url
+    )
     REDIS_URL = os.getenv("REDIS_URL", "redis://cache:6379")
     REDIS_TTL = int(os.getenv("REDIS_TTL", 300))
 
