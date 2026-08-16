@@ -8,8 +8,10 @@
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body class="{{ bg_class }}">
 <div class="card">
+
     <h1>🌤 Weatherender forecast</h1>
     <div class="time">Data for: {{ now }}</div>
 
@@ -23,6 +25,7 @@
     {% endif %}
 
     {% if weather %}
+        <!-- CURRENT WEATHER -->
         <div class="weather-info">
             <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
             <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
@@ -32,11 +35,18 @@
             <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
         </div>
 
+        <!-- 24-HOUR FORECAST -->
         <h3>⏰ 24-Hour Forecast</h3>
         <div class="table-container">
             <table>
                 <thead>
-                    <tr><th>Time</th><th>Temperature</th><th>Precipitation %</th><th>UV Index</th><th>Pressure</th></tr>
+                    <tr>
+                        <th>Time</th>
+                        <th>Temperature</th>
+                        <th>Precipitation %</th>
+                        <th>UV Index</th>
+                        <th>Pressure</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for hour in hourly %}
@@ -52,11 +62,19 @@
             </table>
         </div>
 
+        <!-- 3-DAY FORECAST -->
         <h3>📅 3-Day Forecast</h3>
         <div class="table-container">
             <table>
                 <thead>
-                    <tr><th>Date</th><th>Avg Temp</th><th>Precipitation (mm)</th><th>Max UV</th><th>Wind Speed</th><th>Gusts</th></tr>
+                    <tr>
+                        <th>Date</th>
+                        <th>Avg Temp</th>
+                        <th>Precipitation (mm)</th>
+                        <th>Max UV</th>
+                        <th>Wind Speed</th>
+                        <th>Gusts</th>
+                    </tr>
                 </thead>
                 <tbody>
                     {% for day in daily %}
@@ -73,6 +91,6 @@
             </table>
         </div>
     {% endif %}
-</div>
+
 </body>
 </html>
