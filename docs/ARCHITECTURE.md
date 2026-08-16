@@ -44,7 +44,7 @@ Weatherender/
 │   └── logging_config.py    # Structured JSON logging initialization
 ├── CLI/                    # Standalone Command-Line Interface tool
 ├── tests/                  # Automated pytest suite (unit, mocked services, integration tests)
-├── load-tests/             # k6 load performance scripts (smoke, load, stress, spike)
+├── load_tests/             # k6 load performance scripts (smoke, load, stress, spike)
 ├── docs/                   # Technical documentation
 │   ├── PERFORMANCE.md       # Benchmarks, load-testing methodology & bottleneck analysis
 │   ├── DEPLOYMENT.md        # Production deployment guide (Render + Supabase + Upstash)

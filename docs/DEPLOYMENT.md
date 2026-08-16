@@ -102,6 +102,6 @@ This creates a new commit that undoes the change and triggers a fresh (safe) dep
 
 ## 7. Local Development
 
-See the [Quick Start](README.md#quick-start-docker) section in the README for running the full stack locally via `docker-compose` — the same `WEB/`, `CLI/`, and database/cache setup used in production, minus the cloud-specific connection strings.
+See the [Quick Start](../README.md#quick-start-docker) section in the README for running the full stack locally via `docker-compose` — the same `WEB/`, `CLI/`, and database/cache setup used in production, minus the cloud-specific connection strings.
 
 Note: locally, `docker-compose.yml` maps the host port using `FLASK_PORT` (`ports: "${FLASK_PORT}:${FLASK_PORT}"`), while the Dockerfile's Gunicorn command binds to `PORT` (defaulting to `5001`). These need to agree — set both to the same value (`5001`) in your `.env`, or the port mapping and the actual bound port will mismatch.

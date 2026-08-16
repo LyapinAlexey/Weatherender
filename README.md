@@ -40,7 +40,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - ❤️ Readiness health check (`/health`) with Docker/Compose integration
 - 🔒 Security hardening: secure headers (Talisman), request size limits, User-Agent validation
 - 📝 Structured JSON logging
-- 🚀 Load-tested with [k6](https://k6.io/) (smoke, load, stress, spike) — see [`docs/performance.md`](docs/performance.md)
+- 🚀 Load-tested with [k6](https://k6.io/) (smoke, load, stress, spike) — see [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md)
 - ☁️ Production Cloud Deployment: Hosted on Render, integrated with Supabase (PostgreSQL) and Upstash (Redis), featuring an automated heartbeat worker ([UptimeRobot](https://uptimerobot.com/)) to maintain 24/7 web service availability
 
 ### Tech Stack
@@ -104,7 +104,15 @@ To ensure high performance and minimize reliance on external services, the appli
 
 ## Performance Testing
 
-The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/performance.md`](docs/performance.md). Scripts live in `load-tests/`.
+The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md). Scripts live in `load_tests/`.
+
+## Further Documentation
+
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — component responsibilities, request/data flow, infrastructure
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — how the production deployment (Render + Supabase + Upstash) is set up and reproduced
+- [`docs/API.md`](docs/API.md) — full API reference (endpoints, params, error formats, rate limiting)
+- [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md) — load-testing methodology and results
+- [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — project history by date/theme
 
 ## Running Tests
 
@@ -138,28 +146,9 @@ The next major architectural evolution of **Weatherender** is fully planned:
 ### Project Stability
 The application is currently in a fully stable, containerized, and production-grade state. It will remain active and autonomously maintained in the cloud.
 
-## Project Structure
-```text
-Weather/
-├── WEB/ # Flask web app
-|   ├── api_routes.py    # JSON API routes (/api/weather, /api/apispec.json)
-│   ├── swagger_config.py # OpenAPI spec configuration
-│   └── logging_config.py # Structured JSON logging setup
-├── CLI/ # CLI tool
-├── tests/ # pytest suite
-├── load-tests/ # k6 scripts (smoke, load, stress, spike) — see docs/performance.md
-├── docs/
-│   └── performance.md # Load testing methodology & results
-├── alembic/ # DB migrations
-├── schemas.py # Marshmallow validation
-├── services.py # Shared weather/geo service layer
-├── cache.py # Redis caching layer (get/set with TTL, graceful fallback)
-├── models.py # SQLAlchemy models
-├── config.py # Env-based configuration
-└── docker-compose.yml
-```
+## Project Structure & Architecture
 
-## Project architecture
+Three top-level pieces share a common core: `WEB/` (Flask app + JSON API), `CLI/` (command-line tool), and shared modules (`services.py`, `models.py`, `cache.py`, `config.py`, `schemas.py`). Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ![Project architecture](docs/architecture.svg)
 

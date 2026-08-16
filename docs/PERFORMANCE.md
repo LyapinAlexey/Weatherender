@@ -1,6 +1,6 @@
 # Performance Testing
 
-Load testing is done with [k6](https://k6.io/). Scripts live in `load-tests/`.
+Load testing is done with [k6](https://k6.io/). Scripts live in `load_tests/`.
 
 ## Strategy
 
@@ -71,8 +71,8 @@ Gradual ramp: 10 → 20 → 30 → 40 VUs, 30s per step, against `localhost:5001
 
 Even with no network or CPU constraints, a small but consistent error rate remains at higher concurrency (30-40 VUs). Two hypotheses were tested and ruled out:
 
-1. **SQLAlchemy connection pool exhaustion** — increased `pool_size` from the default (5) to 10, with `max_overflow=20`. Result: **no change** (`checks_failed` 3.08%, within noise).
-2. **Gunicorn worker count** — considered increasing from 4 to 8 workers, but decided against testing it: since the connection-pool fix (a more direct lever) had zero effect, and CPU wasn't the constraint locally, more workers were unlikely to help either.
+1. **SQLAlchemy connection pool exhaustion** — increased `pool_size` from the default (5) to 10, with `max_overflow=20`. Result: **no change** (`checks_failed` 3.08%, within noise). Kept anyway as safe headroom (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
+2. **Gunicorn worker count** — at the time of these tests, decided against increasing it from 4: since the connection-pool fix (a more direct lever) had zero effect, and CPU wasn't the constraint locally, more workers seemed unlikely to help either. The worker count was later raised to `-w 8` in production regardless (see [`DEPLOYMENT.md`](DEPLOYMENT.md)) — this change hasn't been re-benchmarked with the same k6 scripts, so its actual effect on the error rate documented here is unverified.
 
 **Conclusion:** the ~3-6% error rate at 30-40+ concurrent VUs appears to be an architectural ceiling of the current sync-code-on-gevent-workers approach (context-switch overhead, OS-level TCP backlog), not a config value that can be tuned away. Resolving it fully would likely require a true async stack — which lines up with the planned FastAPI service in the roadmap.
 
@@ -107,11 +107,11 @@ Nearly identical to the stress test's numbers at a similar VU count. **The appli
 
 ```bash
 # Smoke & load — against the live Render deployment
-k6 run load-tests/smoke.js
-k6 run load-tests/load.js
+k6 run load_tests/smoke.js
+k6 run load_tests/load.js
 
 # Stress & spike — local only, requires docker-compose running
 docker-compose up -d
-k6 run load-tests/stress.js
-k6 run load-tests/spike.js
+k6 run load_tests/stress.js
+k6 run load_tests/spike.js
 ```
