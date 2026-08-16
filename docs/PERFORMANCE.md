@@ -1,12 +1,12 @@
 # Performance Testing
 
-Load testing is done with [k6](https://k6.io/). Scripts live in `load-tests/`.
+Load testing is done with [k6](https://k6.io/). Scripts live in `load_tests/`.
 
 ## Strategy
 
 Two environments are used, on purpose:
 
-- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure or tripping the rate limiter (15 req/min per worker).
+- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure or tripping the web route's rate limiter (`25 per minute` per IP, on `/` only — the `/api/*` routes hit by these scripts aren't currently rate-limited).
 - **Stress & spike tests** run only **locally** against `docker-compose` (`localhost:5001`), where nothing is rate-limited or resource-capped by a third party. This is where the application is deliberately pushed past its limits.
 
 | Script         | Target             | VUs (peak) | Purpose                                      |
@@ -71,8 +71,8 @@ Gradual ramp: 10 → 20 → 30 → 40 VUs, 30s per step, against `localhost:5001
 
 Even with no network or CPU constraints, a small but consistent error rate remains at higher concurrency (30-40 VUs). Two hypotheses were tested and ruled out:
 
-1. **SQLAlchemy connection pool exhaustion** — increased `pool_size` from the default (5) to 10, with `max_overflow=20`. Result: **no change** (`checks_failed` 3.08%, within noise).
-2. **Gunicorn worker count** — considered increasing from 4 to 8 workers, but decided against testing it: since the connection-pool fix (a more direct lever) had zero effect, and CPU wasn't the constraint locally, more workers were unlikely to help either.
+1. **SQLAlchemy connection pool exhaustion** — increased `pool_size` from the default (5) to 10, with `max_overflow=20`. Result: **no change** (`checks_failed` 3.08%, within noise). Kept anyway as safe headroom (see [`DEPLOYMENT.md`](DEPLOYMENT.md)).
+2. **Gunicorn worker count** — at the time of these tests, decided against increasing it from 4: since the connection-pool fix (a more direct lever) had zero effect, and CPU wasn't the constraint locally, more workers seemed unlikely to help either. The worker count was later raised to `-w 8` in production regardless (see [`DEPLOYMENT.md`](DEPLOYMENT.md)) — this change hasn't been re-benchmarked with the same k6 scripts, so its actual effect on the error rate documented here is unverified.
 
 **Conclusion:** the ~3-6% error rate at 30-40+ concurrent VUs appears to be an architectural ceiling of the current sync-code-on-gevent-workers approach (context-switch overhead, OS-level TCP backlog), not a config value that can be tuned away. Resolving it fully would likely require a true async stack — which lines up with the planned FastAPI service in the roadmap.
 
