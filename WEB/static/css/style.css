@@ -1,48 +1,94 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     margin: 0;
-    padding: 40px;
+    padding: 40px 20px;
     display: flex;
     justify-content: center;
     min-height: 100vh;
-    transition: background 0.8s ease;
+    box-sizing: border-box;
+    transition: background 0.6s ease, color 0.2s ease;
+    background-attachment: fixed;
+    background-size: cover;
 }
+
 /* Backgrounds */
 .sunny { background: linear-gradient(135deg, #4facfe, #00f2fe); }
 .rainy { background: linear-gradient(135deg, #203a43, #2c5364); }
 .cloudy { background: linear-gradient(135deg, #757f9a, #d7dde8); }
 .thunder { background: linear-gradient(135deg, #141e30, #243b55); }
-/* Main cart */
+
+/* Main container */
 .card {
     background: white;
     padding: 30px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.1);
     width: 100%;
     max-width: 800px;
+    box-sizing: border-box;
 }
-h1 { margin-top: 0; color: #1877f2; font-size: 28px; }
-h3 { color: #1c1e21; margin-top: 30px; margin-bottom: 15px; border-left: 4px solid #1877f2; padding-left: 10px; }
-.time { color: #65676b; font-size: 14px; margin-bottom: 20px; }
-.search-form { display: flex; gap: 10px; margin-bottom: 25px; }
+
+h1 {
+    margin-top: 0;
+    color: #1877f2;
+    font-size: 28px;
+}
+
+h3 {
+    color: #1c1e21;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-left: 4px solid #1877f2;
+    padding-left: 10px;
+}
+
+.time {
+    color: #65676b;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.search-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
 input[type="text"] {
     flex: 1;
     padding: 12px;
     border: 1px solid #ced4da;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
+
+input[type="text"]:focus {
+    border-color: #1877f2;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
+}
+
 button {
     padding: 12px 20px;
     background-color: #1877f2;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
     font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
 }
-button:hover { background-color: #166fe5; }
+
+button:hover {
+    background-color: #166fe5;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
 /* Current weather */
 .weather-info p {
     font-size: 16px;
@@ -50,29 +96,48 @@ button:hover { background-color: #166fe5; }
     border-bottom: 1px solid #f0f2f5;
     padding-bottom: 8px;
 }
+
+.weather-info p:last-child {
+    border-bottom: none;
+}
+
 /* Errors */
 .error {
     color: #e41e3f;
     background: #ffebe9;
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: bold;
 }
-/* Tables */
+
 /* Tables */
 .table-container {
     width: 100%;
     overflow-x: auto;
-    margin-bottom: 20px;
+    -webkit-overflow-scrolling: touch;
     border-radius: 12px;
     border: 1px solid #e4e6eb;
     background-color: #ffffff;
+}
+
+.hourly-container {
+    max-height: 410px;
+    overflow-y: auto;
+}
+
+.hourly-container th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background-color: #f0f2f5;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
     font-size: 15px;
+    white-space: nowrap;
 }
 
 th, td {
@@ -86,36 +151,161 @@ th {
     font-weight: 600;
 }
 
-thead tr th:first-child {
-    border-top-left-radius: 12px;
+tbody tr:nth-child(odd) { background-color: #ffffff; }
+tbody tr:nth-child(even) { background-color: #f7f8fa; }
+tbody tr:hover { background-color: #eef1f6; }
+
+td:nth-child(1), th:nth-child(1) { text-align: left; }
+td:nth-child(n+2), th:nth-child(n+2) { text-align: center; }
+
+/* Blocks */
+.block {
+    margin-bottom: 30px;
 }
 
-thead tr th:last-child {
-    border-top-right-radius: 12px;
+.block:last-child {
+    margin-bottom: 0;
 }
 
-tbody tr:nth-child(odd) {
-    background-color: #ffffff;
+/* ===================================================
+   3-DAY FORECAST CARDS (PC & MOBILE)
+   =================================================== */
+.daily-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f7f8fa;
-}
-
-tbody tr:hover {
-    background-color: #eef1f6;
-}
-
-td:nth-child(1) {
-    text-align: left;
-}
-
-td:nth-child(n+2) {
+.day-card {
+    background: #f7f8fa;
+    border: 1px solid #e4e6eb;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     text-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-body {
-  transition: background 0.6s ease, color 0.2s ease;
-  background-attachment: fixed;
-  background-size: cover;
+.day-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.day-date {
+    font-weight: bold;
+    font-size: 16px;
+    color: #1877f2;
+    margin-bottom: 8px;
+}
+
+.day-temp {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1c1e21;
+    margin-bottom: 12px;
+}
+
+.day-details {
+    width: 100%;
+    text-align: left;
+    font-size: 13px;
+    color: #4b4d51;
+}
+
+.day-details p {
+    margin: 6px 0;
+    border-bottom: 1px dashed #e4e6eb;
+    padding-bottom: 4px;
+}
+
+.day-details p:last-child {
+    border-bottom: none;
+}
+
+.chart-title {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    font-size: 15px;
+    color: #65676b;
+}
+
+.chart-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid #e4e6eb;
+    border-radius: 12px;
+    padding: 12px 8px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.chart-inner {
+    width: 1000px;
+    height: 200px;
+}
+
+/* ===================================================
+   MOBILE RESPONSIVE STYLES & THREE BLOCKS LAYOUT
+   =================================================== */
+@media (max-width: 600px) {
+    body {
+        padding: 12px 8px;
+    }
+
+    .card {
+        padding: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .block {
+        background: #ffffff;
+        padding: 20px 16px;
+        border-radius: 16px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    h2 {
+        font-size: 18px;
+    }
+
+    h3 {
+        font-size: 16px;
+        margin-top: 0;
+    }
+
+    .search-form {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    button {
+        width: 100%;
+    }
+
+    .weather-info p {
+        font-size: 14px;
+    }
+
+    th, td {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+
+    .hourly-container {
+        max-height: 310px;
+    }
+
+    .daily-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
 }

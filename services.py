@@ -39,7 +39,6 @@ class WeatherService:
             response = requests.get(f"https://ipinfo.io/{ip_address}/json", timeout=3)
             if response.status_code == 200:
                 data = response.json()
-                # Вытаскиваем провайдера
                 provider = str(data.get("org", "")).lower()
                 if "google" in provider or "render" in provider or "amazon" in provider:
                     return "Robot-Datacenter"
