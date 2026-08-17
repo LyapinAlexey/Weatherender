@@ -220,11 +220,18 @@ def index() -> str:
     daily_forecast = []
     for day in data["forecast"]["forecastday"]:
         d_obj = datetime.strptime(day["date"], "%Y-%m-%d")
+        day_info = day["day"]
+        chance_precip = max(
+            day_info.get("daily_chance_of_rain", 0),
+            day_info.get("daily_chance_of_snow", 0),
+        )
+
         daily_forecast.append(
             {
                 "date": d_obj.strftime("%d.%m.%Y"),
                 "temp": day["day"]["avgtemp_c"],
                 "precipitation": day["day"]["totalprecip_mm"],
+                "chance_precip": chance_precip,
                 "uv": round(day["day"]["uv"]),
                 "wind": day["day"]["maxwind_kph"],
                 "gust": round(
