@@ -6,12 +6,11 @@
     <title>Weatherender</title>
     <meta name="description" content="Production-grade weather application with a Flask web UI and CLI tool, featuring Redis caching, PostgreSQL persistence, and fully automated Docker/CI workflows made by Lyapin Alexey">
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
-
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body class="{{ bg_class }}">
-<div class="card">
+<div class="card" id="main-card">
 
     <!-- BLOCK 1: TITLE, SEARCH, AND CURRENT WEATHER -->
     <div class="block block-current">
@@ -31,7 +30,7 @@
             <div class="weather-info">
                 <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
                 <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
-                <p><strong>📝 Condition:</strong> {{ weather.current.condition.text }}</p>
+                <p><strong>📝 Condition:</strong> <span id="current-cond">{{ weather.current.condition.text }}</span></p>
                 <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
                 <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
                 <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>

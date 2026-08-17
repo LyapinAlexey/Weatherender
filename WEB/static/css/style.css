@@ -21,8 +21,8 @@ body {
 .card {
     background: white;
     padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 20px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.1);
     width: 100%;
     max-width: 800px;
     box-sizing: border-box;
@@ -58,13 +58,15 @@ input[type="text"] {
     flex: 1;
     padding: 12px;
     border: 1px solid #ced4da;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 input[type="text"]:focus {
     border-color: #1877f2;
+    box-shadow: 0 0 0 3px rgba(24, 119, 242, 0.15);
 }
 
 button {
@@ -72,15 +74,19 @@ button {
     background-color: #1877f2;
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     cursor: pointer;
     font-weight: bold;
-    transition: background-color 0.2s;
+    transition: background-color 0.2s, transform 0.1s;
 }
 
 button:hover {
     background-color: #166fe5;
+}
+
+button:active {
+    transform: scale(0.98);
 }
 
 /* Current weather */
@@ -100,7 +106,7 @@ button:hover {
     color: #e41e3f;
     background: #ffebe9;
     padding: 10px;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: bold;
 }
 
@@ -179,12 +185,12 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: center; }
     flex-direction: column;
     align-items: center;
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
 .day-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 .day-date {
@@ -218,7 +224,6 @@ td:nth-child(n+2), th:nth-child(n+2) { text-align: center; }
     border-bottom: none;
 }
 
-/* Подзаголовок для графика */
 .chart-title {
     margin-top: 20px;
     margin-bottom: 10px;
