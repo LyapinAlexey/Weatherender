@@ -146,3 +146,8 @@ class TestRoutes:
         response = client.get("/api/ping")
         assert response.status_code == 200
         assert response.get_json() == {"status": "ok"}
+
+    def test_ping_never_rate_limited(self, client):
+        for _ in range(100):
+            response = client.get("/api/ping")
+            assert response.status_code != 429
