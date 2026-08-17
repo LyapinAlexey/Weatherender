@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weatherender</title>
     <meta name="description" content="Production-grade weather application with a Flask web UI and CLI tool, featuring Redis caching, PostgreSQL persistence, and fully automated Docker/CI workflows made by Lyapin Alexey">
     <link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
@@ -12,85 +13,83 @@
 <body class="{{ bg_class }}">
 <div class="card">
 
-    <h1>🌤 Weatherender forecast</h1>
-    <div class="time">Data for: {{ now }}</div>
+    <!-- BLOCK 1: TITLE, SEARCH, AND CURRENT WEATHER -->
+    <div class="block block-current">
+        <h1>🌤 Weatherender forecast</h1>
+        <div class="time">Data for: {{ now }}</div>
 
-    <form class="search-form" method="POST">
-        <input type="text" name="city" placeholder="Enter city (e.g., Paris)..." required>
-        <button type="submit">Get Info</button>
-    </form>
+        <form class="search-form" method="POST">
+            <input type="text" name="city" placeholder="Enter city (e.g., Paris)..." required>
+            <button type="submit">Get Info</button>
+        </form>
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if weather %}
+            <div class="weather-info">
+                <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
+                <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
+                <p><strong>📝 Condition:</strong> {{ weather.current.condition.text }}</p>
+                <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
+                <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
+                <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
+            </div>
+        {% endif %}
+    </div>
 
     {% if weather %}
-        <!-- CURRENT WEATHER -->
-        <div class="weather-info">
-            <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
-            <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
-            <p><strong>📝 Condition:</strong> {{ weather.current.condition.text }}</p>
-            <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
-            <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
-            <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
+        <!-- BLOCK 2: 24-HOUR FORECAST -->
+        <div class="block block-hourly">
+            <h3>⏰ 24-Hour Forecast</h3>
+
+            <div class="table-container hourly-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Temperature</th>
+                            <th>Precipitation %</th>
+                            <th>UV Index</th>
+                            <th>Pressure</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hour in hourly %}
+                        <tr>
+                            <td><strong>{{ hour.time | first if hour.time is iterable and hour.time is not string else hour.time }}</strong></td>
+                            <td>{{ hour.temp }}°C</td>
+                            <td>{{ hour.precipitation }}%</td>
+                            <td>{{ hour.uv }}</td>
+                            <td>{{ hour.pressure }} mmHg</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- 24-HOUR FORECAST -->
-        <h3>⏰ 24-Hour Forecast</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Temperature</th>
-                        <th>Precipitation %</th>
-                        <th>UV Index</th>
-                        <th>Pressure</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for hour in hourly %}
-                    <tr>
-                        <td><strong>{{ hour.time | first if hour.time is iterable and hour.time is not string else hour.time }}</strong></td>
-                        <td>{{ hour.temp }}°C</td>
-                        <td>{{ hour.precipitation }}%</td>
-                        <td>{{ hour.uv }}</td>
-                        <td>{{ hour.pressure }} mmHg</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 3-DAY FORECAST -->
-        <h3>📅 3-Day Forecast</h3>
-        <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Avg Temp</th>
-                        <th>Precipitation (mm)</th>
-                        <th>Max UV</th>
-                        <th>Wind Speed</th>
-                        <th>Gusts</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for day in daily %}
-                    <tr>
-                        <td><strong>{{ day.date }}</strong></td>
-                        <td>{{ day.temp }}°C</td>
-                        <td>{{ day.precipitation }} mm</td>
-                        <td>{{ day.uv }}</td>
-                        <td>{{ day.wind }} km/h</td>
-                        <td>{{ day.gust }} km/h</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- BLOCK 3: 3-DAY FORECAST (CARDS) -->
+        <div class="block block-daily">
+            <h3>📅 3-Day Forecast</h3>
+            <div class="daily-cards">
+                {% for day in daily %}
+                <div class="day-card">
+                    <div class="day-date">{{ day.date }}</div>
+                    <div class="day-temp">🌡 {{ day.temp }}°C</div>
+                    <div class="day-details">
+                        <p><strong>🌧 Precip:</strong> {{ day.precipitation }} mm</p>
+                        <p><strong>☀️ Max UV:</strong> {{ day.uv }}</p>
+                        <p><strong>💨 Wind:</strong> {{ day.wind }} km/h</p>
+                        <p><strong>🌪 Gusts:</strong> {{ day.gust }} km/h</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     {% endif %}
 
+</div>
 </body>
 </html>
