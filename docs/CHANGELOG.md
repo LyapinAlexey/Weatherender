@@ -4,6 +4,13 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-17 – Snow state calculation logic fix & unit tests
+
+- Fixed a logic bug in `WeatherService.get_snow_state`: eliminated false-positive `Ice crust` statuses on bare ground during near-zero or positive temperatures by enforcing strict snow depth checks (`snow_depth_cm > 0` or `snow_24h_cm > 0`) and proper diurnal freeze-thaw evaluation (`max_temp_c > 0 and min_temp_c < 0`).
+- Fully integrated previously unaccessed parameters and variables into the snow state decision tree: `min_temp_c`, `max_temp_c`, `wind_kph`, and the calculated `snow_density`.
+- Added a comprehensive parameterized unit test suite in `tests/test_snow_state.py` covering all 11 distinct meteorological scenarios and branching paths, fully verified via `pytest`.
+- Maintained clean code quality standards: all modifications successfully passed `mypy` type checking alongside `ruff` and `isort` pre-commit hooks.
+
 ## 2026-08-17 — Rate limiting docs sync
 - Updated `docs/API.md` and `docs/ARCHITECTURE.md` to match the code: removed the "not rate-limited" notes for `/api/weather`/`api_bp`, documented the actual per-route limits, the `WEB/extensions.py` module, and the `exempt()`-on-blueprint gotcha as a rate-limiting design note.
 
