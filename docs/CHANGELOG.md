@@ -4,6 +4,11 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-17 — Logging audit closed & config normalization test coverage
+- Completed the logging-level audit (`logger.warning()` vs `logger.error()`/`.exception()`) across `app.py`, `api_routes.py`, `CLI/main.py`, and `services.py` — previously only 1-2 call sites had been reviewed.
+- Added `tests/test_config.py` covering the `postgres://` → `postgresql://` normalization in `config.py`: legacy scheme gets rewritten, an already-correct `postgresql://` URL is left untouched (exact-match assertion, not just a prefix check), and the unset case correctly yields `None`.
+- Along the way, worked out the correct pattern for testing module-level config computed at import time: `monkeypatch.setenv`/`delenv` plus `importlib.reload(sys.modules["config"])`, with an `autouse` fixture restoring the module to its real state after each test. Also had to patch `dotenv.load_dotenv` at its source (not the `config.load_dotenv` reference) — `reload` re-runs the `from dotenv import load_dotenv` line, which would otherwise silently re-fetch `DATABASE_URL` from `.env` and undo the `delenv`.
+
 ## 2026-08-14 — Documentation restructure & spike testing
 - Added a spike test (`spike.js`) for sudden traffic bursts, completing the k6 test suite (smoke/load/stress/spike).
 - Split documentation: removed the original `performance.md`, added dedicated `PERFORMANCE.md` and `ARCHITECTURE.md`, and added `SECURITY.md` + `CODE_OF_CONDUCT.md` for security policy and community standards.
