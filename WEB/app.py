@@ -12,11 +12,11 @@ from datetime import datetime
 
 try:
     from .api_routes import api_bp, get_weather
+    from .extensions import limiter
 except ImportError:
     from api_routes import api_bp, get_weather  # type: ignore[no-redef]
+    from extensions import limiter  # type: ignore[no-redef]
 from flask import Flask, g, render_template, request, session
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_talisman import Talisman
 from marshmallow import ValidationError
@@ -57,11 +57,7 @@ def add_security_headers(response):
 
 Talisman(app, force_https=False)
 metrics = PrometheusMetrics(app)
-limiter = Limiter(
-    key_func=get_remote_address,
-    app=app,
-    storage_uri="memory://",
-)
+limiter.init_app(app)
 app.register_blueprint(api_bp)
 swaggerui_bp = get_swaggerui_blueprint(SWAGGER_URL, API_URL)
 app.register_blueprint(swaggerui_bp, url_prefix=SWAGGER_URL)

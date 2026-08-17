@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-17 — API rate limiting
+- Closed the documented gap where `/api/weather` and the rest of the `api_bp` blueprint were not rate-limited: applied the same `flask-limiter` limit used on `/` (25 requests/minute per worker, in-memory) to the whole blueprint via `limiter.limit("25 per minute")(api_bp)`.
+- Exempted `/api/ping` from this limit via `limiter.exempt(ping)`, since it's a liveness endpoint for uptime monitors; `/health` was already outside `api_bp` and needed no change.
+- Verified under load (400 sequential requests against 8 gevent workers): roughly half returned `200`, the rest `429`, confirming the per-worker in-memory limiter behaves as expected; `/api/ping` kept returning `200` throughout.
+- Correction: earlier docs referenced the `/` rate limit as 15/min — the actual code has always been **25/min per worker** (`25 per minute`, ×4 workers in production docs, ×8 workers in the local docker-compose setup which runs gevent with `-w 8`). Docs will be updated to reflect this.
+
 ## 2026-08-17 — Logging audit closed & config normalization test coverage
 - Completed the logging-level audit (`logger.warning()` vs `logger.error()`/`.exception()`) across `app.py`, `api_routes.py`, `CLI/main.py`, and `services.py` — previously only 1-2 call sites had been reviewed.
 - Added `tests/test_config.py` covering the `postgres://` → `postgresql://` normalization in `config.py`: legacy scheme gets rewritten, an already-correct `postgresql://` URL is left untouched (exact-match assertion, not just a prefix check), and the unset case correctly yields `None`.
