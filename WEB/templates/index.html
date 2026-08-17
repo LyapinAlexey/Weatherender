@@ -28,18 +28,24 @@
 
         {% if weather %}
             <div class="weather-info">
-                <h2>{{ weather.location.name }}, {{ weather.location.country }}</h2>
+                <h2>{{ weather.location.region }}, {{ weather.location.country }}</h2>
+                {% if elevation > 0 %}
+                    <p>⛰️ <strong>Altitude:</strong> {{ "%.0f"|format(elevation) }} meters above sea level</p>
+                {% endif %}
                 <p><strong>🌡 Current Temperature:</strong> {{ weather.current.temp_c }}°C</p>
                 <p><strong>📝 Condition:</strong> <span id="current-cond">{{ weather.current.condition.text }}</span></p>
                 <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
                 <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
                 <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
+
+                {% if snow_info and snow_info.status %}
+                    <p><strong>⛷️ Snow Condition:</strong> <span id="snow-status">{{ snow_info.status }}</span></p>
+                {% endif %}
             </div>
         {% endif %}
     </div>
 
     {% if weather %}
-        <!-- BLOCK 2: 24-HOUR FORECAST -->
         <div class="block block-hourly">
             <h3>⏰ 24-Hour Forecast</h3>
 
@@ -69,7 +75,6 @@
             </div>
         </div>
 
-        <!-- BLOCK 3: 3-DAY FORECAST (CARDS) -->
         <div class="block block-daily">
             <h3>📅 3-Day Forecast</h3>
             <div class="daily-cards">
@@ -83,6 +88,10 @@
                         <p><strong>☀️ Max UV:</strong> {{ day.uv }}</p>
                         <p><strong>💨 Wind:</strong> {{ day.wind }} km/h</p>
                         <p><strong>🌪 Gusts:</strong> {{ day.gust }} km/h</p>
+
+                        {% if day.snow_state and day.snow_state.status %}
+                            <p><strong>⛷️ Snow:</strong> {{ day.snow_state.status }}</p>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
