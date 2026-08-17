@@ -40,6 +40,7 @@ Weatherender/
 ├── WEB/                   # Flask Web Application Layer
 │   ├── app.py              # App entry point — Talisman, rate limiter, Prometheus metrics, web routes (/, /health)
 │   ├── api_routes.py        # JSON API Blueprint (/api/weather, /api/ping, /api/apispec.json)
+│   ├── extensions.py        # flask-limiter instance (created here to avoid circular imports between app.py and api_routes.py)
 │   ├── swagger_config.py    # OpenAPI 3.0 specification & Swagger UI configuration
 │   └── logging_config.py    # Structured JSON logging initialization
 ├── CLI/                    # Standalone Command-Line Interface tool
@@ -64,8 +65,8 @@ Weatherender/
 ## 4. Component Responsibilities
 
 ### 🔹 Web Layer (`WEB/`)
-- **`app.py`**: The application entry point. Registers `flask-talisman` (secure headers), `PrometheusMetrics` (`/metrics`), and `Flask-Limiter` (rate limiting, currently applied to the `/` route only). Handles the server-rendered web UI (`/`) and the DB-connectivity readiness check (`/health`).
-- **`api_routes.py`**: A separate Flask Blueprint (`api_bp`) exposing the JSON REST API — `/api/weather`, `/api/ping`, `/api/apispec.json`. These routes are **not** currently covered by the rate limiter registered in `app.py`.
+- **`app.py`**: Registers `flask-talisman` (secure headers), `PrometheusMetrics` (`/metrics`), and `Flask-Limiter` (rate limiting, applied to `/` and, per-route, to `/api/weather` and `/api/apispec.json`).
+- **`api_routes.py`**: A separate Flask Blueprint (`api_bp`) exposing the JSON REST API — `/api/weather`, `/api/ping`, `/api/apispec.json`. `/api/weather` and `/api/apispec.json` carry their own `@limiter.limit(...)` decorators (imported from `WEB/extensions.py`); `/api/ping` is intentionally left unlimited.
 - **`swagger_config.py`**: Exposes interactive API documentation at `/apidocs` and the JSON specification at `/api/apispec.json`.
 - **`logging_config.py`**: Enforces structured JSON formatted logs across the application context for machine-readable log parsing.
 
@@ -127,7 +128,7 @@ There are two distinct request paths that write different amounts of data — th
  Client (API consumer)
         │
         ▼
- [ WEB Layer: api_routes.py ] ───(no rate limiter, no DB session opened)
+ [ WEB Layer: api_routes.py ] ───(per-route rate limiter on /api/weather, no DB session opened)
         │
         ▼
  [ Validation Layer ] ───(Marshmallow Validation in schemas.py)

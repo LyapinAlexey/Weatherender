@@ -2,9 +2,12 @@ from flask import Blueprint, request
 from marshmallow import ValidationError
 
 try:
+    from .extensions import limiter
     from .swagger_config import spec
 except ImportError:
     from swagger_config import spec  # type: ignore[no-redef]
+    from extensions import limiter  # type: ignore[no-redef]
+
 from schemas import CityRequestSchema
 from services import WeatherService
 
@@ -12,6 +15,7 @@ api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
 @api_bp.route("/weather")
+@limiter.limit("25 per minute")
 def get_weather():
     """Get weather by city name
     ---
@@ -45,6 +49,7 @@ def get_weather():
 
 
 @api_bp.route("/apispec.json")
+@limiter.limit("25 per minute")
 def get_apispec():
     return spec.to_dict()
 

@@ -4,6 +4,16 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-17 — Rate limiting docs sync
+- Updated `docs/API.md` and `docs/ARCHITECTURE.md` to match the code: removed the "not rate-limited" notes for `/api/weather`/`api_bp`, documented the actual per-route limits, the `WEB/extensions.py` module, and the `exempt()`-on-blueprint gotcha as a rate-limiting design note.
+
+## 2026-08-17 — API rate limiting
+- Closed the documented gap where `/api/weather` and the rest of the `api_bp` blueprint were not rate-limited: applied the same `flask-limiter` limit used on `/` (25 requests/minute per worker, in-memory) directly to `/api/weather` and `/api/apispec.json` via `@limiter.limit("25 per minute")`. `/api/ping` (liveness endpoint for uptime monitors) and `/health` remain unlimited.
+- Along the way, moved `limiter = Limiter(...)` out of `app.py` into a new `WEB/extensions.py`, created without an app binding (`limiter.init_app(app)` called separately in `app.py`) — needed so `api_routes.py` could import `limiter` directly for the per-route decorators without a circular import back to `app.py`.
+- Initially tried a single blueprint-wide `limiter.limit(...)(api_bp)` plus `limiter.exempt(ping)` to keep `/api/ping` unlimited — in practice `exempt()` didn't take effect on a blueprint-registered view in this `flask-limiter` version (4.1.1): `/api/ping` kept returning `429` under load even after the exempt call ran. Switched to per-route `@limiter.limit(...)` decorators on `get_weather` and `get_apispec` instead, leaving `ping` undecorated — more explicit and it actually works.
+- Verified under load (400 sequential requests against 8 gevent workers): `/api/weather` split roughly evenly between `200` and `429` as expected; `/api/ping` returned `200` for effectively all 400 requests with no rate limiting.
+- Correction: earlier docs referenced the `/` rate limit as 15/min — the actual code has always been **25/min per worker** (`25 per minute`, ×4 workers in production docs, ×8 workers in the local docker-compose setup which runs gevent with `-w 8`). Docs will be updated to reflect this.
+
 ## 2026-08-17 — Logging audit closed & config normalization test coverage
 - Completed the logging-level audit (`logger.warning()` vs `logger.error()`/`.exception()`) across `app.py`, `api_routes.py`, `CLI/main.py`, and `services.py` — previously only 1-2 call sites had been reviewed.
 - Added `tests/test_config.py` covering the `postgres://` → `postgresql://` normalization in `config.py`: legacy scheme gets rewritten, an already-correct `postgresql://` URL is left untouched (exact-match assertion, not just a prefix check), and the unset case correctly yields `None`.
