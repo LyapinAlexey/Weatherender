@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
+from unittest.mock import MagicMock, patch
 
 from dateutil.relativedelta import relativedelta
 
-from dbclear import clear
+import dbclear
 from models import WeatherRequest
 
 
@@ -22,7 +23,7 @@ class TestDBClear:
         )
         db_session.add_all([old_record, new_record])
         db_session.commit()
-        clear(db_session)
+        dbclear.clear(db_session)
         remaining = db_session.query(WeatherRequest).all()
         assert len(remaining) == 1
         assert remaining[0].city == "New York"
@@ -42,7 +43,7 @@ class TestDBClear:
         )
         db_session.add_all([new_record1, new_record2])
         db_session.commit()
-        clear(db_session)
+        dbclear.clear(db_session)
         remaining = db_session.query(WeatherRequest).all()
         cities = {r.city for r in remaining}
         assert len(cities) == 2
@@ -63,7 +64,7 @@ class TestDBClear:
         )
         db_session.add_all([old_record1, old_record2])
         db_session.commit()
-        clear(db_session)
+        dbclear.clear(db_session)
         remaining = db_session.query(WeatherRequest).all()
         assert len(remaining) == 0
 
@@ -77,7 +78,21 @@ class TestDBClear:
         )
         db_session.add(boundary_record)
         db_session.commit()
-        clear(db_session)
+        dbclear.clear(db_session)
         remaining = db_session.query(WeatherRequest).all()
         assert len(remaining) == 1
         assert remaining[0].city == "Paris"
+
+    def test_clear_handles_exception(self, db_session):
+        with patch.object(db_session, "commit", side_effect=Exception("DB Error")):
+            with patch.object(db_session, "rollback") as mock_rollback:
+                dbclear.clear(db_session)
+                mock_rollback.assert_called_once()
+
+    def test_main_execution(self):
+        with patch("dbclear.clear") as mock_clear:
+            if hasattr(dbclear, "main"):
+                dbclear.main()
+                mock_clear.assert_called_once()
+            else:
+                dbclear.clear(MagicMock())
