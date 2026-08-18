@@ -1,21 +1,74 @@
-MIT License
+SSCI Custom License v1.1
+© 2026 Alex Lyapin
+Author: Alex Lyapin
+Email: lehacomp16@gmail.com
+Project: SSCI — Snow Surface Condition Index
 
-Copyright (c) 2026 Lyapin Alexey Petrovich
+This license applies to all files, code, algorithms, formulas, models, data,
+API endpoints, documentation, and any other content contained in this repository,
+including all future versions and updates.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+1. Non-Commercial Use
+   Permission is granted to use, copy, and modify this work for non-commercial
+   purposes only. Any non-commercial use must retain this license in full and
+   preserve all attribution requirements.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+2. Mandatory Attribution
+   Any use of this work, including derivatives, must include clear attribution:
+   "SSCI model by Alex Lyapin" and a link to the original repository.
+   Attribution must be visible, unaltered, and easily accessible to end users.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+3. Derivative Works
+   If you modify, adapt, or build upon this work, you must:
+   - clearly indicate all changes made,
+   - retain attribution to the original author,
+   - include this license with the derivative work,
+   - state that the derivative is based on the SSCI model.
+
+4. Commercial Use
+   Commercial use of this work, or any derivative of it, is strictly prohibited
+   without explicit written permission from the author.
+   Permission may be granted only through:
+   - signed agreement, or
+   - written email confirmation from the author (lehacomp16@gmail.com).
+   Without such permission, commercial use is illegal.
+
+   "Commercial use" includes, but is not limited to:
+   - paid services,
+   - SaaS platforms,
+   - subscription-based access,
+   - API monetization,
+   - integration into commercial software,
+   - use in business operations,
+   - use in paid mobile or web applications,
+   - use in advertising or marketing.
+
+5. No Removal of Attribution
+   You may not remove, alter, hide, or obscure:
+   - the author's name,
+   - copyright notice,
+   - license terms,
+   - references to the SSCI model,
+   - links to the original repository.
+
+6. No Sublicensing
+   You may not sublicense this work or grant commercial rights to third parties.
+   Only the author may issue commercial licenses.
+
+7. Reverse Engineering Prohibited
+   You may not attempt to reverse engineer, extract, reconstruct, or replicate
+   the underlying algorithm, formula, or model for the purpose of bypassing
+   licensing restrictions or creating a competing commercial product.
+
+8. AI and Model Training Restrictions
+   This work may not be used to train AI models, machine learning systems,
+   or automated code generation tools without explicit written permission
+   from the author.
+
+9. No Warranty
+   This work is provided "as is" without warranty of any kind. The author is not
+   liable for any damages arising from the use of this work.
+
+10. Contact for Commercial Licensing
+    For commercial licensing inquiries, contact:
+    Email: lehacomp16@gmail.com
