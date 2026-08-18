@@ -14,7 +14,7 @@ This document details the high-level architecture, design patterns, component in
 - **Shared Core Services**: Both WEB and CLI interfaces leverage a unified business logic and data access layer.
 - **Resilience & Fallback**: Automatic IP geolocation failover chain and graceful degradation when Redis caching is offline.
 - **Production Performance**: Flask served via Gunicorn utilizing `gevent` workers, with `psycogreen` patching `psycopg2` for non-blocking PostgreSQL network I/O.
-- **Data Maintenance**: Probabilistic automated DB storage cleanup logic executed on active web traffic.
+- **Data Maintenance**: Deterministic periodic DB cleanup via APScheduler, guarded by a lock-file leader-election pattern to avoid duplicate execution across Gunicorn workers.
 
 ---
 
@@ -41,6 +41,7 @@ Weatherender/
 │   ├── app.py              # App entry point — Talisman, rate limiter, Prometheus metrics, web routes (/, /health)
 │   ├── api_routes.py        # JSON API Blueprint (/api/weather, /api/ping, /api/apispec.json)
 │   ├── extensions.py        # flask-limiter instance (created here to avoid circular imports between app.py and api_routes.py)
+│   ├── scheduler.py         # APScheduler background job (periodic DB cleanup) with lock-file leader election
 │   ├── swagger_config.py    # OpenAPI 3.0 specification & Swagger UI configuration
 │   └── logging_config.py    # Structured JSON logging initialization
 ├── CLI/                    # Standalone Command-Line Interface tool
@@ -55,6 +56,7 @@ Weatherender/
 ├── schemas.py              # Marshmallow input validation and output serialization schemas
 ├── services.py              # Shared business logic, external API integration & IP fallback chain
 ├── cache.py                # Redis caching layer (TTL execution & graceful fallback)
+├── dbclear.py               # Deletes WeatherRequest rows older than 30 days; invoked by scheduler.py
 ├── models.py                # SQLAlchemy ORM models
 ├── config.py                # Centralized environment-based settings (`.env`)
 └── docker-compose.yml       # Orchestration for App, CLI, PostgreSQL, and Redis containers
@@ -69,12 +71,12 @@ Weatherender/
 - **`api_routes.py`**: A separate Flask Blueprint (`api_bp`) exposing the JSON REST API — `/api/weather`, `/api/ping`, `/api/apispec.json`. `/api/weather` and `/api/apispec.json` carry their own `@limiter.limit(...)` decorators (imported from `WEB/extensions.py`); `/api/ping` is intentionally left unlimited.
 - **`swagger_config.py`**: Exposes interactive API documentation at `/apidocs` and the JSON specification at `/api/apispec.json`.
 - **`logging_config.py`**: Enforces structured JSON formatted logs across the application context for machine-readable log parsing.
+- **`scheduler.py`**: Runs periodic maintenance via APScheduler's `BackgroundScheduler`, calling `dbclear.clear()` every 7 days to purge `WeatherRequest` rows older than 30 days. Since Gunicorn runs multiple worker processes (`-w 4`), a naive scheduler start would run once per worker. This is solved with a **lock-file leader-election pattern**: each worker atomically attempts to create `/tmp/scheduler_leader.lock` via `os.open(path, O_CREAT | O_EXCL | O_WRONLY)`; only the worker that succeeds starts the scheduler. Known limitation: the lock file persists for the container's lifetime, so if Gunicorn restarts a crashed leader worker, the new process won't reclaim leadership until the next deploy (fresh filesystem). `init_scheduler()` is called from `app.py` after `Config.validate()`, so a failing config prevents lock acquisition rather than leaving a stale, unclaimed lock behind.
 
 ### 🔹 Core Domain Services (`services.py`, `schemas.py`)
 - **`services.py`**:
   - Encapsulates weather requests via [WeatherAPI](https://www.weatherapi.com/).
   - Executes **IP Geolocation Fallback Chain**: Attempts detection via `ip-api.com` first; if unavailable, falls back to `ipinfo.io`.
-  - Executes **Automated Data Rotation**: Triggered probabilistically (1% chance on web traffic) to execute a lightweight `clear()` operation on stored logs/records to remain within PostgreSQL tier storage constraints.
 - **`schemas.py`**: Strictly validates incoming query parameters (e.g., city names) and standardizes API output formats using Marshmallow.
 
 ### 🔹 Data & Caching Engine (`models.py`, `cache.py`, `alembic/`)
@@ -82,6 +84,7 @@ Weatherender/
 - **`cache.py`**:
   - Implements key-value operations against Redis with a default 5-minute Time-To-Live (`REDIS_TTL`).
   - Implements **Graceful Degradation**: Catches Redis connectivity errors automatically, ensuring the app proceeds to fetch data directly from upstream sources without breaking client execution.
+- **`dbclear.py`**: Deletes `WeatherRequest` rows older than 30 days (`created_at < now - 1 month`). Invoked on a schedule by `WEB/scheduler.py`; can also be run standalone (`python dbclear.py`).
 - **`alembic/`**: Maintains database schema version control.
 
 ---
@@ -146,7 +149,7 @@ There are two distinct request paths that write different amounts of data — th
 ## 6. Infrastructure, Observability & Cloud Deployment
 
 1. **Gunicorn + Gevent Stack**:
-   In production, Gunicorn uses `gevent` workers (`-w 8 --worker-class gevent --worker-connections 50`) alongside `psycogreen`, which patches `psycopg2` for non-blocking PostgreSQL I/O under gevent. This was adopted after load testing showed Gunicorn's default `sync` workers dropping connections under concurrent load — see [`PERFORMANCE.md`](PERFORMANCE.md) for the full investigation and before/after numbers.
+   In production, Gunicorn uses `gevent` workers (`-w 4 --worker-class gevent --worker-connections 50`) alongside `psycogreen`, which patches `psycopg2` for non-blocking PostgreSQL I/O under gevent. This was adopted after load testing showed Gunicorn's default `sync` workers dropping connections under concurrent load — see [`PERFORMANCE.md`](PERFORMANCE.md) for the full investigation and before/after numbers.
 2. **Cold-Start & Database Connection Optimization**:
    - Hosted on Render (App) + Supabase (PostgreSQL) + Upstash (Redis). Full setup steps in [`DEPLOYMENT.md`](DEPLOYMENT.md).
    - An external automated worker (**UptimeRobot**) sends an HTTP GET request to `/api/ping` every 10 minutes.
