@@ -37,13 +37,17 @@ class WeatherService:
         condition_text: str = "",
         prev_day_max_temp: float = 0.0,
         totalprecip_mm: float = 0.0,
+        will_it_snow: int = 0,
+        totalsnow_cm: float = 0.0,
     ) -> dict:
 
         cond = condition_text.lower()
         snow_density = (totalprecip_mm / (snow_24h_cm * 10)) if snow_24h_cm > 0 else 0.1
 
-        if snow_depth_cm <= 0 and snow_24h_cm <= 0 and totalprecip_mm < 0.1:
-            return {"status": "No snow data"}
+        if temp_c > 15 or (
+            will_it_snow == 0 and totalsnow_cm <= 0 and snow_depth_cm <= 0
+        ):
+            return {"status": "No snow"}
 
         if snow_depth_cm > 0 or snow_24h_cm > 0:
             is_freeze_thaw = max_temp_c > 0 and min_temp_c < 0
