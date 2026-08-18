@@ -106,7 +106,7 @@ def index() -> str:
         if "db_session" not in g:
             g.db_session = SessionLocal()
 
-        city = None
+        city: str | None = None
         if request.method == "POST":
             city = request.form.get("city", "").strip()
             try:
@@ -115,7 +115,11 @@ def index() -> str:
                 error = "Error while fetching city: city must be a string and between 1 and 100 characters. City isn't valid"
                 logger.warning(error)
                 info_valide_err = WeatherRequest(
-                    city=city if len(city) <= 100 else city[:95] + "...",
+                    city=(
+                        city
+                        if (city and len(city) <= 100)
+                        else (city or "")[:95] + "..."
+                    ),
                     source="web",
                     success=0,
                     error_message=error,
@@ -148,7 +152,12 @@ def index() -> str:
 
         if not city:
             user_ip = request.headers.get("X-Forwarded-For", request.remote_addr)
-            city = WeatherService.get_city_by_ip(user_ip)
+            raw_city = WeatherService.get_city_by_ip(user_ip)
+            city = (
+                f"{raw_city[0]},{raw_city[1]}"
+                if isinstance(raw_city, tuple)
+                else raw_city
+            )
             if city == "Robot-Datacenter":
                 city = "London"
                 robot_data = WeatherService.get_weather(city, api_key=active_api_key)
