@@ -211,7 +211,7 @@ def index() -> str:
             info_suc = WeatherRequest(
                 city=str(query_param),
                 source="web",
-                temp_c=data["current"]["temp_c"],
+                temp_c=round(data["current"]["temp_c"], 2),
                 condition=data["current"]["condition"]["text"],
                 success=1,
                 error_message=None,
@@ -248,26 +248,30 @@ def index() -> str:
                 condition_text=current.get("condition", {}).get("text", ""),
                 prev_day_max_temp=today_day.get("maxtemp_c", current.get("temp_c", 0)),
                 totalprecip_mm=today_day.get("totalprecip_mm", 0.0),
+                will_it_snow=today_day.get("daily_will_it_snow", 0),
+                totalsnow_cm=today_day.get("totalsnow_cm", 0.0),
             )
 
         hourly_forecast = []
-        api_localtime = datetime.strptime(
-            data["location"]["localtime"], "%Y-%m-%d %H:%M"
-        )
-        current_hour_str = api_localtime.strftime("%Y-%m-%d %H:00")
-        all_hours = [
-            hour for day in data["forecast"]["forecastday"] for hour in day["hour"]
-        ]
+        location_data = data.get("location", {})
+        raw_localtime = location_data.get("localtime")
+        current_hour_str = ""
+
+        if raw_localtime:
+            api_localtime = datetime.strptime(raw_localtime, "%Y-%m-%d %H:%M")
+            current_hour_str = api_localtime.strftime("%Y-%m-%d %H:00")
+
+        all_hours = [hour for day in forecast_days for hour in day.get("hour", [])]
         count = 0
         for hour in all_hours:
-            if hour["time"] >= current_hour_str:
+            if hour.get("time", "") >= current_hour_str:
                 prob_precip = max(
                     hour.get("chance_of_rain", 0), hour.get("chance_of_snow", 0)
                 )
                 hourly_forecast.append(
                     {
                         "time": hour["time"].split(" ")[1],
-                        "temp": hour["temp_c"],
+                        "temp": round(hour["temp_c"], 2),
                         "precipitation": prob_precip,
                         "uv": round(hour["uv"]),
                         "pressure": round(hour["pressure_mb"] * 0.750062),
@@ -278,22 +282,31 @@ def index() -> str:
                     break
 
         daily_forecast = []
-        forecast_days = data["forecast"]["forecastday"]
+
+        forecast_days = data.get("forecast", {}).get("forecastday", [])
+        if not forecast_days:
+            today_day = {}
+        else:
+            today_day = forecast_days[0].get("day", {})
+
         for i, day in enumerate(forecast_days):
-            d_obj = datetime.strptime(day["date"], "%Y-%m-%d")
-            day_info = day["day"]
+            raw_date = day.get("date")
+            if not raw_date:
+                continue
+            d_obj = datetime.strptime(raw_date, "%Y-%m-%d")
+            day_info = day.get("day", {})
             chance_precip = max(
                 day_info.get("daily_chance_of_rain", 0),
                 day_info.get("daily_chance_of_snow", 0),
             )
             if i > 0:
-                prev_day_max_temp = forecast_days[i - 1]["day"].get(
-                    "maxtemp_c", day_info["avgtemp_c"]
+                prev_day = forecast_days[i - 1]
+                prev_day_info = prev_day.get("day", {})
+                prev_day_max_temp = prev_day_info.get(
+                    "maxtemp_c", day_info.get("avgtemp_c", 0)
                 )
             else:
-                prev_day_max_temp = day_info.get(
-                    "maxtemp_c", data["current"].get("temp_c", 0)
-                )
+                prev_day_max_temp = day_info.get("maxtemp_c", 0)
 
             day_snow_state = WeatherService.get_snow_state(
                 temp_c=day_info.get("avgtemp_c", 0),
@@ -307,18 +320,20 @@ def index() -> str:
                 condition_text=day_info.get("condition", {}).get("text", ""),
                 prev_day_max_temp=prev_day_max_temp,
                 totalprecip_mm=day_info.get("totalprecip_mm", 0.0),
+                will_it_snow=day_info.get("daily_will_it_snow", 0),
+                totalsnow_cm=day_info.get("totalsnow_cm", 0.0),
             )
 
             daily_forecast.append(
                 {
                     "date": d_obj.strftime("%d.%m.%Y"),
-                    "temp": round(day["day"]["avgtemp_c"], 2),
-                    "precipitation": day["day"]["totalprecip_mm"],
+                    "temp": round(day_info.get("avgtemp_c", 0.0), 2),
+                    "precipitation": day_info.get("totalprecip_mm", 0.0),
                     "chance_precip": chance_precip,
-                    "uv": round(day["day"]["uv"]),
-                    "wind": day["day"]["maxwind_kph"],
+                    "uv": round(day_info.get("uv", 0.0)),
+                    "wind": day_info.get("maxwind_kph", 0.0),
                     "gust": round(
-                        day["day"].get("gust_kph", day["day"]["maxwind_kph"] * 1.2)
+                        day_info.get("gust_kph", day_info.get("maxwind_kph", 0.0) * 1.2)
                     ),
                     "snow_state": day_snow_state,
                 }
