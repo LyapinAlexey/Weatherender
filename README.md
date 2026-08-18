@@ -50,8 +50,8 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`
-- **API & Docs:** `apispec`, `flask-swagger-ui` (OpenAPI/Swagger)
-- **Observability:** `prometheus-flask-exporter`, structured JSON logging
+- **API & Docs:** `apispec`, `flask-swagger-ui (OpenAPI/Swagger)`
+- **Observability:** `prometheus-flask-exporter`, `structured JSON logging`
 - **Security:** `flask-talisman`
 - **Caching:** `Redis`, `redis-py`
 
