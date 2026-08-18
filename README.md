@@ -1,6 +1,6 @@
 # Weatherender
 
-Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices.
+Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices, has been developed by Alex Lyapin. The application provides current weather information, a 3-day forecast, and a unique Snow Surface Condition Index (SSCI) for skiers and outdoor enthusiasts.
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
@@ -163,3 +163,29 @@ It's been developing since I was 13 years old.
 I'm an active alpine skier (currently holding the 2nd adult sports rank and training for the 1st) and a full-time student at **Gymnasium 1514**. Due to intensive academic tracking and a demanding winter training schedule on the ski slopes, my development velocity temporarily transitions into a maintenance phase during the winter season — full-scale feature development resumes during the next summer cycle.
 
 I also write about the engineering side of this project on my [Habr profile](https://habr.com/en/users/LyapinAlexey/).
+
+## License
+
+This project is licensed under the **SSCI Custom License v1.1**.
+
+Non-commercial use is allowed with mandatory attribution.
+Commercial use of any part of this project (including code, algorithms, formulas,
+models, API, or documentation) is strictly prohibited without explicit written
+permission from the author.
+
+Full license text:
+[SSCI Custom License v1.1](./LICENSE)
+
+For commercial licensing inquiries, contact:
+
+<p align="center">
+  <a href="mailto:lehacomp16@gmail.com">
+    <img src="https://img.shields.io/badge/EMAIL-lehacomp16@gmail.com-red?style=for-the-badge&logo=gmail" />
+  </a>
+  <a href="https://t.me/LyapinAlexey">
+    <img src="https://img.shields.io/badge/TELEGRAM-@LyapinAlexey-blue?style=for-the-badge&logo=telegram" />
+  </a>
+  <a href="https://wa.me/">
+    <img src="https://img.shields.io/badge/WHATSAPP-@LyapinAlex-green?style=for-the-badge&logo=whatsapp" />
+  </a>
+</p>
