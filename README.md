@@ -25,7 +25,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 ## Features
 
 - 🌦 Current weather + 3-day forecast via [WeatherAPI](https://www.weatherapi.com/)
-- Advanced Snow State Analytics: A *unique* algorithmic snow condition and quality detection system (featuring statuses like *Dry champagne powder!*, *Ice crust*, *Spring slush*, *Wind slab*, etc.). The analysis evaluates diurnal temperature cycles, wind speed, snow density, and 24-hour precipitation metrics.
+- Advanced Snow Surface Condition Index(SSCI): A *unique* algorithmic snow condition and quality detection system (featuring statuses like *Dry champagne powder!*, *Ice crust*, *Spring slush*, *Wind slab*, etc.). The analysis evaluates diurnal temperature cycles, wind speed, snow density, and 24-hour precipitation metrics.
 - 🖥 Web interface (Flask) and CLI tool, sharing a common service/model layer
 - 📍 Automatic city detection by IP (with fallback chain: ip-api.com → ipinfo.io)
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations

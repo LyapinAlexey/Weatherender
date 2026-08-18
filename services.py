@@ -122,7 +122,13 @@ class WeatherService:
         return "London"  # Fallback
 
     @staticmethod
-    def get_weather(city: str, api_key: str | None = None) -> dict:
+    def get_weather(
+        city: str | tuple[float, float], api_key: str | None = None
+    ) -> dict:
+        if isinstance(city, tuple):
+            city = f"{city[0]},{city[1]}"
+        else:
+            city = city.strip()
         active_key = api_key or getattr(Config, "WEATHER_API_KEY", None)
         cache_key = f"weather:{city.strip().lower()}"
         cached_data = cache_service.get(cache_key)
