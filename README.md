@@ -25,7 +25,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 ## Features
 
 - 🌦 Current weather + 3-day forecast via [WeatherAPI](https://www.weatherapi.com/)
-- Advanced Snow State Analytics: A unique algorithmic snow condition and quality detection system (featuring statuses like *Dry champagne powder!*, *Ice crust*, *Spring slush*, *Wind slab*, etc.). The analysis evaluates diurnal temperature cycles, wind speed, snow density, and 24-hour precipitation metrics.
+- Advanced Snow State Analytics: A *unique* algorithmic snow condition and quality detection system (featuring statuses like *Dry champagne powder!*, *Ice crust*, *Spring slush*, *Wind slab*, etc.). The analysis evaluates diurnal temperature cycles, wind speed, snow density, and 24-hour precipitation metrics.
 - 🖥 Web interface (Flask) and CLI tool, sharing a common service/model layer
 - 📍 Automatic city detection by IP (with fallback chain: ip-api.com → ipinfo.io)
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
@@ -139,7 +139,6 @@ This repository strictly adheres to professional enterprise software development
 
 The next major architectural evolution of **Weatherender** is fully planned:
 
-- [ ] **Ski & Snow Analytics:** Implement a specialized service layer to track real-time ski resort data, including snow depth, snow quality, and freezing levels optimized for alpine sports
 - [ ] **Dynamic Radar Maps:** Integrate interactive precipitation radar and dynamic weather maps using GIS/Leaflet tools to visualize snow and rain fronts
 - [ ] **Asynchronous API v2 (FastAPI Migration):** Design a high-performance `api/v2` microservice using **FastAPI** and asynchronous drivers (`asyncio`, `asyncpg`) to dramatically increase request throughput and study async patterns
 - [ ] **User Authentication & Custom Alerts:** Implement secure JWT or session-based user authentication via Supabase Auth, allowing skiers to save favorite resorts and customize automated notification limits

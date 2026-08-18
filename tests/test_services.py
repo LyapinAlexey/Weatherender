@@ -16,11 +16,15 @@ class TestGetCityByIp(unittest.TestCase):
     @patch("services.requests.get")
     def test_ip_geo_success_from_ip_api(self, mock_get):
         mock_response = Mock(status_code=200)
+        mock_response.json.return_value = {
+            "status": "success",
+            "lat": 52.5200,
+            "lon": 13.4050,
+        }
         mock_get.return_value = mock_response
-        mock_response.json.return_value = {"status": "success", "city": "Berlin"}
-        city = WeatherService.get_city_by_ip("8.8.8.8")
-        assert city == "Berlin"
-        assert mock_get.call_count == 1
+
+        result = WeatherService.get_city_by_ip("8.8.8.8")
+        assert result == "52.52,13.405"
 
     @patch("services.requests.get")
     def test_ip_localhost_returns_moscow(self, mock_get):

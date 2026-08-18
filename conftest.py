@@ -43,6 +43,7 @@ def fake_weather_response() -> dict:
             "localtime": "2026-07-16 12:00",
             "name": "Berlin",
             "country": "Germany",
+            "region": "Berlin",
         },
         "current": {
             "temp_c": 20,
