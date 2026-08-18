@@ -46,7 +46,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `Flask`, `Gunicorn` (gevent workers + `psycogreen`), `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
+- **Backend:** `Python 3.13`, `Flask`, `Gunicorn (gevent workers + psycogreen)`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`
