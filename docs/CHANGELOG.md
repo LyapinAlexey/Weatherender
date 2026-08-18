@@ -17,8 +17,6 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 - Fully integrated previously unaccessed parameters and variables into the snow state decision tree: `min_temp_c`, `max_temp_c`, `wind_kph`, and the calculated `snow_density`.
 - Added a comprehensive parameterized unit test suite in `tests/test_snow_state.py` covering all 11 distinct meteorological scenarios and branching paths, fully verified via `pytest`.
 - Maintained clean code quality standards: all modifications successfully passed `mypy` type checking alongside `ruff` and `isort` pre-commit hooks.
-
-## 2026-08-17 — Rate limiting docs sync
 - Updated `docs/API.md` and `docs/ARCHITECTURE.md` to match the code: removed the "not rate-limited" notes for `/api/weather`/`api_bp`, documented the actual per-route limits, the `WEB/extensions.py` module, and the `exempt()`-on-blueprint gotcha as a rate-limiting design note.
 
 ## 2026-08-17 — API rate limiting
