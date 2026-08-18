@@ -19,6 +19,7 @@ COPY alembic.ini /app
 COPY bg_class.py /app
 COPY cache.py /app
 COPY WEB/extensions.py /app
+COPY WEB/scheduler.py /app
 ENV PORT=5001
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD curl -f http://localhost:${PORT}/health || exit 1

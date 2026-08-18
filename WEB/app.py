@@ -7,15 +7,16 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
-import random
 from datetime import datetime
 
 try:
     from .api_routes import api_bp, get_weather
     from .extensions import limiter
+    from .scheduler import init_scheduler
 except ImportError:
     from api_routes import api_bp, get_weather  # type: ignore[no-redef]
     from extensions import limiter  # type: ignore[no-redef]
+    from scheduler import init_scheduler  # type: ignore[no-redef]
 from flask import Flask, g, render_template, request, session
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_talisman import Talisman
@@ -25,7 +26,6 @@ from sqlalchemy import text
 
 from bg_class import determine_bg_class
 from config import Config
-from dbclear import clear
 from logging_config import setup_logging
 from models import SessionLocal, WeatherRequest
 from schemas import CityRequestSchema
@@ -66,6 +66,7 @@ with app.test_request_context():
 app.config.from_object(Config)
 app.config["MAX_CONTENT_LENGTH"] = 1 * 1024 * 1024  # 1 MB
 Config.validate()
+init_scheduler()
 schema = CityRequestSchema()
 app.secret_key = Config.SECRET_KEY
 
@@ -340,8 +341,6 @@ def index() -> str:
             )
 
         bg_class = determine_bg_class(data["current"]["condition"]["text"])
-        if random.random() < 0.01:
-            clear(g.db_session)
         return render_template(
             "index.html",
             weather=data,

@@ -4,6 +4,13 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-18 — Periodic DB cleanup via APScheduler
+- Replaced the probabilistic (0.01% per-request) call to `dbclear.clear()` in `app.py` with a deterministic scheduled job: new `WEB/scheduler.py` uses APScheduler's `BackgroundScheduler` to run cleanup every 7 days.
+- Solved the multi-worker duplication problem (4 Gunicorn workers would otherwise each start their own scheduler) with a leader-election-via-lock-file pattern: workers race to atomically create `/tmp/scheduler_leader.lock` via `os.open(..., O_CREAT | O_EXCL | O_WRONLY)`; only the worker that wins runs the scheduler. Documented as a known limitation: a restarted leader worker won't reclaim leadership until the next container redeploy.
+- `init_scheduler()` wired into `app.py`, called after `Config.validate()`.
+- Added `tests/test_scheduler.py` (5 tests): lock-file acquisition (file absent/present), `run_dbclear_job` session handling, and `init_scheduler` branch coverage (leader vs. non-leader) via mocking.
+- Updated `docs/ARCHITECTURE.md`: documented the new module and the leader-election design, removed the stale reference to probabilistic cleanup, corrected the outdated `-w 8` worker count to the actual `-w 4`.
+
 ## 2026-08-17 – Snow state calculation logic fix & unit tests
 
 - Fixed a logic bug in `WeatherService.get_snow_state`: eliminated false-positive `Ice crust` statuses on bare ground during near-zero or positive temperatures by enforcing strict snow depth checks (`snow_depth_cm > 0` or `snow_24h_cm > 0`) and proper diurnal freeze-thaw evaluation (`max_temp_c > 0 and min_temp_c < 0`).

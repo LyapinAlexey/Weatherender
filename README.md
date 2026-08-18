@@ -29,12 +29,12 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 🖥 Web interface (Flask) and CLI tool, sharing a common service/model layer
 - 📍 Automatic city detection by IP (with fallback chain: ip-api.com → ipinfo.io)
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
-- 🧹 Automated probabilistic storage rotation (`clear()` triggered on 1% of web requests) to safely stay within DB storage limits
+- 🧹 Automated DB cleanup: Background storage rotation powered by `APScheduler` (running weekly with a file-lock mechanism to prevent duplicate worker triggers) to safely stay within DB limits.
 - ✅ Input validation with Marshmallow
 - 🚦 Rate limiting (flask-limiter)
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
-- 🧪 73+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
+- 🧪 87+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
 - 🔌 JSON REST API (`/api/weather`) with interactive Swagger/OpenAPI docs
 - ⚡ Redis caching for WeatherAPI responses (TTL-based, graceful fallback on Redis unavailability)
 - 📊 Prometheus metrics endpoint (`/metrics`) for observability
