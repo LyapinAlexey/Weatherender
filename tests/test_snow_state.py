@@ -13,7 +13,7 @@ from services import WeatherService
                 "snow_24h_cm": 0.0,
                 "totalprecip_mm": 0.0,
             },
-            "No snow data",
+            "No snow",
         ),
         # 2. Ice crust
         (
