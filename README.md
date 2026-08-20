@@ -4,12 +4,16 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+![Flask](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/SSCI-Custom_License-green)
 [![codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](
   https://codecov.io/github/LyapinAlexey/Weatherender
 )
 
 ## 🌐 Live Demo
+
+> The application is currently in a fully stable, containerized, and production-grade state. It will remain active and autonomously maintained in the cloud.
 
 **[weather-7icc.onrender.com](https://weather-7icc.onrender.com)**
 
@@ -49,7 +53,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - **Backend:** `Python 3.13`, `Flask`, `Gunicorn (gevent workers + psycogreen)`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
-- **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`
+- **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
 - **API & Docs:** `apispec`, `flask-swagger-ui (OpenAPI/Swagger)`
 - **Observability:** `prometheus-flask-exporter`, `structured JSON logging`
 - **Security:** `flask-talisman`
@@ -57,7 +61,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ## Quick Start (Docker)
 
-> Prefer not to run it locally? Try the [live demo](#-live-demo) above.
+> Prefer not to run it locally? Try the [live demo](https://weather-7icc.onrender.com) above.
 
 1. Clone the repo and copy the environment template:
 ```bash
@@ -107,6 +111,28 @@ To ensure high performance and minimize reliance on external services, the appli
 
 The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md). Scripts live in `load_tests/`.
 
+### Running Load Tests Locally
+
+You can replicate the performance benchmarks locally using the pre-configured Docker Compose stack. Run any of the following commands from the root directory:
+
+#### 1. Smoke Test (Verify basic API stability)
+```bash
+docker compose run --rm k6 run /load_tests/smoke_test.js
+```
+#### 2. Load Test (Simulate regular daily traffic)
+```bash
+docker compose run --rm k6 run /load_tests/load_test.js
+```
+
+#### 3. Stress Test (Find the system's breaking point) — [running locally](#quick-start-docker)
+```bash
+docker compose run --rm k6 run /load_tests/stress_test.js
+```
+#### 4. Spike Test (Validate resilience against sudden traffic bursts) — [running locally](#quick-start-docker)
+```bash
+docker compose run --rm k6 run /load_tests/spike_test.js
+```
+
 ## Further Documentation
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — component responsibilities, request/data flow, infrastructure
@@ -143,14 +169,33 @@ The next major architectural evolution of **Weatherender** is fully planned:
 - [ ] **Asynchronous API v2 (FastAPI Migration):** Design a high-performance `api/v2` microservice using **FastAPI** and asynchronous drivers (`asyncio`, `asyncpg`) to dramatically increase request throughput and study async patterns
 - [ ] **User Authentication & Custom Alerts:** Implement secure JWT or session-based user authentication via Supabase Auth, allowing skiers to save favorite resorts and customize automated notification limits
 
-### Project Stability
-The application is currently in a fully stable, containerized, and production-grade state. It will remain active and autonomously maintained in the cloud.
-
 ## Project Structure & Architecture
 
 Three top-level pieces share a common core: `WEB/` (Flask app + JSON API), `CLI/` (command-line tool), and shared modules (`services.py`, `models.py`, `cache.py`, `config.py`, `schemas.py`). Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ![Project architecture](docs/architecture.svg)
+
+## Engineering Challenges & Bug Investigations
+
+A full technical deep-dive into blockers, edge cases, and architectural updates can be tracked in closed [Project Issues](https://github.com/LyapinAlexey/Weatherender/issues). Key production-level engineering challenges solved during development include:
+
+### 1. Database Pollution Mitigation & HTTP HEAD Short-Circuiting ([Issue #9](https://github.com))
+* **The Incident (Post-Mortem):** Continuous 10-minute uptime checks from [UptimeRobot](https://uptimerobot.com) targeting the root route (`/`) were heavily polluting the operational logs and telemetry within the Supabase PostgreSQL storage layer, triggering unintended database writes and accumulating thousands of empty automated tracking rows.
+* **Root Cause Analysis:** The external monitor was explicitly configured to use the `HTTP HEAD` method. However, because Flask by default implicitly converts unhandled `HEAD` requests to `GET` on routes without explicit declaration, the request bypassed custom `User-Agent` string filtering layers. This initiated a redundant `SessionLocal()` DB connection and triggered execution of an unpredictable insert query lifecycle on every health probe.
+* **Engineering Solution & Shield:** 
+  1. Updated the internal `/api/ping` route configuration within `api_routes.py` to explicitly support both `GET` and `HEAD` methods to handle direct infrastructure probes natively.
+  2. Overhauled the core index (`/`) route decorator in `app.py` by introducing explicit `HEAD` support (`methods=["GET", "POST", "HEAD"]`).
+  3. Placed a high-priority, zero-cost early return check (`if request.method == "HEAD": return ""`) at the very first line of execution.
+* **Results:** Database pollution was successfully brought down to **0%**, server resources were completely preserved, and database sessions are now never initialized for non-human monitoring traffic.
+
+### 2. Flask-Limiter Blueprint Registry Mismatch & Circular Dependency Resolution ([Issue #10](https://github.com/LyapinAlexey/Weatherender/issues/10))
+* **The Incident:** During pre-merge manual load testing using a custom `check_limit.sh` script (firing 400 sequential requests), the automated uptime monitor health checks against `/api/ping` consistently failed with `429 Too Many Requests`. The endpoint kept throttling traffic even though an explicit `limiter.exempt(ping)` rule was active in `app.py`.
+* **Root Cause Analysis:** A deep-dive revealed a lifecycle mismatch in how `flask-limiter==4.1.1` registers routes. When applying a blueprint-wide limit (`api_bp`), the `@limiter.exempt` decorator failed because it looked up the bare function name, whereas Flask resolves the request's endpoint at dispatch time using the prefixed name (`api.ping`). Furthermore, attempting to apply decorators directly inside `api_routes.py` introduced immediate circular imports between `app.py` and the routing module.
+* **Engineering Solution:** 
+  1. Broke the circular dependency chain by decoupling the `Limiter` instance instantiation, moving it into an uninitialized state inside a newly designed infrastructure layer: `WEB/extensions.py`.
+  2. Late-bound the engine during the application factory setup in `app.py` via `limiter.init_app(app)`.
+  3. Dropped the fragile blueprint-wide mapping logic entirely. Instead, explicitly declared per-route limits using `@limiter.limit("25 per minute")` directly on the protected production endpoints (`get_weather` and `get_apispec`), leaving the critical `/api/ping` route cleanly undecorated and inherently immune to rate-limiting blocks.
+* **Results:** Re-running the 400-request load test confirmed 100% success on `/api/ping` (returning pure `200 OK` metrics alongside expected gevent network socket resets), while public endpoints correctly isolated and blocked aggressive traffic bursts.
 
 ---
 
@@ -163,6 +208,8 @@ It's been developing since I was 13 years old.
 I'm an active alpine skier (currently holding the 2nd adult sports rank and training for the 1st) and a full-time student at **Gymnasium 1514**. Due to intensive academic tracking and a demanding winter training schedule on the ski slopes, my development velocity temporarily transitions into a maintenance phase during the winter season — full-scale feature development resumes during the next summer cycle.
 
 I also write about the engineering side of this project on my [Habr profile](https://habr.com/en/users/LyapinAlexey/).
+
+---
 
 ## License
 
@@ -180,18 +227,13 @@ For commercial licensing inquiries, contact:
 
 <p align="center">
   <a href="mailto:lehacomp16@gmail.com">
-    <img src="https://img.shields.io/badge/EMAIL-lehacomp16@gmail.com-red?style=for-the-badge&logo=gmail" />
+    <img src="https://shields.io" />
   </a>
 </p>
 
 <p align="center">
-  <a href="https://t.me/LyapinAlexey">
-    <img src="https://img.shields.io/badge/TELEGRAM-@LyapinAlexey-blue?style=for-the-badge&logo=telegram" />
+  <a href="https://t.me">
+    <img src="https://shields.io" />
   </a>
 </p>
 
-<p align="center">
-  <a href="https://wa.me/">
-    <img src="https://img.shields.io/badge/WHATSAPP-@LyapinAlex-green?style=for-the-badge&logo=whatsapp" />
-  </a>
-</p>
