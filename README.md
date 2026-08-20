@@ -4,7 +4,9 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
-![License](https://img.shields.io/badge/SSCI-Custom-License-green)
+![Static Badge](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
+![Static Badge](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![Static Badge](https://img.shields.io/badge/SSCI-Custom_License-green)
 [![codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](
   https://codecov.io/github/LyapinAlexey/Weatherender
 )
@@ -49,7 +51,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - **Backend:** `Python 3.13`, `Flask`, `Gunicorn (gevent workers + psycogreen)`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
-- **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`
+- **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
 - **API & Docs:** `apispec`, `flask-swagger-ui (OpenAPI/Swagger)`
 - **Observability:** `prometheus-flask-exporter`, `structured JSON logging`
 - **Security:** `flask-talisman`
@@ -57,7 +59,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ## Quick Start (Docker)
 
-> Prefer not to run it locally? Try the [live demo](#-live-demo) above.
+> Prefer not to run it locally? Try the [live demo](https://weather-7icc.onrender.com) above.
 
 1. Clone the repo and copy the environment template:
 ```bash
@@ -106,6 +108,28 @@ To ensure high performance and minimize reliance on external services, the appli
 ## Performance Testing
 
 The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md). Scripts live in `load_tests/`.
+
+### Running Load Tests Locally
+
+You can replicate the performance benchmarks locally using the pre-configured Docker Compose stack. Run any of the following commands from the root directory:
+
+#### 1. Smoke Test (Verify basic API stability)
+```bash
+docker compose run --rm k6 run /load_tests/smoke_test.js
+```
+#### 2. Load Test (Simulate regular daily traffic)
+```bash
+docker compose run --rm k6 run /load_tests/load_test.js
+```
+
+#### 3. Stress Test (Find the system's breaking point) — [running locally](#quick-start-docker)
+```bash
+docker compose run --rm k6 run /load_tests/stress_test.js
+```
+#### 4. Spike Test (Validate resilience against sudden traffic bursts) — [running locally](#quick-start-docker)
+```bash
+docker compose run --rm k6 run /load_tests/spike_test.js
+```
 
 ## Further Documentation
 
