@@ -4,9 +4,9 @@ Production-grade weather application with a Flask web interface and CLI tool, bu
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.13-blue)
-![Static Badge](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
-![Static Badge](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
-![Static Badge](https://img.shields.io/badge/SSCI-Custom_License-green)
+![Flask](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/SSCI-Custom_License-green)
 [![codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](
   https://codecov.io/github/LyapinAlexey/Weatherender
 )
