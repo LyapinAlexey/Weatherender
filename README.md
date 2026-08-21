@@ -52,7 +52,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 - **Backend:** `Python 3.13`, `Flask`, `Gunicorn (gevent workers + psycogreen)`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
-- **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`
+- **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`, `APScheduler (for db clear)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
 - **API & Docs:** `apispec`, `flask-swagger-ui (OpenAPI/Swagger)`
 - **Observability:** `prometheus-flask-exporter`, `structured JSON logging`
