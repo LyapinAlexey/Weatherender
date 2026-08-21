@@ -182,7 +182,7 @@ A full technical deep-dive into blockers, edge cases, and architectural updates 
 ### 1. Database Pollution Mitigation & HTTP HEAD Short-Circuiting ([Issue #9](https://github.com))
 * **The Incident (Post-Mortem):** Continuous 10-minute uptime checks from [UptimeRobot](https://uptimerobot.com) targeting the root route (`/`) were heavily polluting the operational logs and telemetry within the Supabase PostgreSQL storage layer, triggering unintended database writes and accumulating thousands of empty automated tracking rows.
 * **Root Cause Analysis:** The external monitor was explicitly configured to use the `HTTP HEAD` method. However, because Flask by default implicitly converts unhandled `HEAD` requests to `GET` on routes without explicit declaration, the request bypassed custom `User-Agent` string filtering layers. This initiated a redundant `SessionLocal()` DB connection and triggered execution of an unpredictable insert query lifecycle on every health probe.
-* **Engineering Solution & Shield:** 
+* **Engineering Solution & Shield:**
   1. Updated the internal `/api/ping` route configuration within `api_routes.py` to explicitly support both `GET` and `HEAD` methods to handle direct infrastructure probes natively.
   2. Overhauled the core index (`/`) route decorator in `app.py` by introducing explicit `HEAD` support (`methods=["GET", "POST", "HEAD"]`).
   3. Placed a high-priority, zero-cost early return check (`if request.method == "HEAD": return ""`) at the very first line of execution.
@@ -191,7 +191,7 @@ A full technical deep-dive into blockers, edge cases, and architectural updates 
 ### 2. Flask-Limiter Blueprint Registry Mismatch & Circular Dependency Resolution ([Issue #10](https://github.com/LyapinAlexey/Weatherender/issues/10))
 * **The Incident:** During pre-merge manual load testing using a custom `check_limit.sh` script (firing 400 sequential requests), the automated uptime monitor health checks against `/api/ping` consistently failed with `429 Too Many Requests`. The endpoint kept throttling traffic even though an explicit `limiter.exempt(ping)` rule was active in `app.py`.
 * **Root Cause Analysis:** A deep-dive revealed a lifecycle mismatch in how `flask-limiter==4.1.1` registers routes. When applying a blueprint-wide limit (`api_bp`), the `@limiter.exempt` decorator failed because it looked up the bare function name, whereas Flask resolves the request's endpoint at dispatch time using the prefixed name (`api.ping`). Furthermore, attempting to apply decorators directly inside `api_routes.py` introduced immediate circular imports between `app.py` and the routing module.
-* **Engineering Solution:** 
+* **Engineering Solution:**
   1. Broke the circular dependency chain by decoupling the `Limiter` instance instantiation, moving it into an uninitialized state inside a newly designed infrastructure layer: `WEB/extensions.py`.
   2. Late-bound the engine during the application factory setup in `app.py` via `limiter.init_app(app)`.
   3. Dropped the fragile blueprint-wide mapping logic entirely. Instead, explicitly declared per-route limits using `@limiter.limit("25 per minute")` directly on the protected production endpoints (`get_weather` and `get_apispec`), leaving the critical `/api/ping` route cleanly undecorated and inherently immune to rate-limiting blocks.
@@ -236,4 +236,3 @@ For commercial licensing inquiries, contact:
     <img src="https://shields.io" />
   </a>
 </p>
-

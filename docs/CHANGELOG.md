@@ -4,6 +4,11 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-21 — Snow forecast in JSON API
+- Extended `/api/weather` response with two derived fields built from `WeatherService.get_snow_state`: `snow_state` (today's snow conditions) and `snow_forecast` (per-day snow conditions across the returned forecast window), mirroring logic already used by the web UI (`/`).
+- Added `tests/test_routes.py` coverage for both the populated-forecast case and the empty-forecast edge case (falls back to `{"status": "No snow data"}` and an empty `snow_forecast` list).
+- Updated the `/api/weather` Swagger/OpenAPI description (`docs`/`/apidocs`) to document the new fields.
+
 ## 2026-08-18 — Periodic DB cleanup via APScheduler
 - Replaced the probabilistic (0.01% per-request) call to `dbclear.clear()` in `app.py` with a deterministic scheduled job: new `WEB/scheduler.py` uses APScheduler's `BackgroundScheduler` to run cleanup every 7 days.
 - Solved the multi-worker duplication problem (4 Gunicorn workers would otherwise each start their own scheduler) with a leader-election-via-lock-file pattern: workers race to atomically create `/tmp/scheduler_leader.lock` via `os.open(..., O_CREAT | O_EXCL | O_WRONLY)`; only the worker that wins runs the scheduler. Documented as a known limitation: a restarted leader worker won't reclaim leadership until the next container redeploy.

@@ -151,3 +151,34 @@ class TestRoutes:
         for _ in range(100):
             response = client.get("/api/ping")
             assert response.status_code != 429
+
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_api_weather_includes_snow_state(
+        self, mock_get_weather, client, fake_weather_response
+    ):
+        mock_get_weather.return_value = fake_weather_response
+        response = client.get("/api/weather?city=London")
+        data = response.get_json()
+
+        assert response.status_code == 200
+        assert "snow_state" in data
+        assert "status" in data["snow_state"]
+        assert "snow_forecast" in data
+        assert isinstance(data["snow_forecast"], list)
+        assert len(data["snow_forecast"]) == 1
+        assert data["snow_forecast"][0]["date"] == "2026-07-16"
+        assert "status" in data["snow_forecast"][0]["snow_state"]
+
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_api_weather_no_forecast_days(self, mock_get_weather, client):
+        empty_forecast_response = {
+            "current": {"temp_c": 20, "condition": {"text": "Sunny"}},
+            "forecast": {"forecastday": []},
+        }
+        mock_get_weather.return_value = empty_forecast_response
+        response = client.get("/api/weather?city=London")
+        data = response.get_json()
+
+        assert response.status_code == 200
+        assert data["snow_state"]["status"] == "No snow data"
+        assert data["snow_forecast"] == []
