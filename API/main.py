@@ -1,7 +1,14 @@
 from contextlib import asynccontextmanager
 
 import httpx
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Query, Request
+
+try:
+    from .async_services import AsyncWeatherService
+except ImportError:
+    from async_services import AsyncWeatherService  # type: ignore[no-redef]
+
+from services import WeatherService
 
 
 @asynccontextmanager
@@ -16,4 +23,66 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/api/v2/weather")
-async def get_weather_v2(request: Request): ...
+async def get_weather_v2(request: Request, city: str = Query(...)) -> dict:
+    client = request.app.state.http_client
+    weather_data = await AsyncWeatherService.get_weather_async(client=client, city=city)
+    if "error" in weather_data:
+        raise HTTPException(status_code=404, detail=weather_data["error"])
+    forecast_days = weather_data.get("forecast", {}).get("forecastday", [])
+    current = weather_data.get("current", {})
+
+    if forecast_days:
+        today_day = forecast_days[0].get("day", {})
+        weather_data["snow_state"] = WeatherService.get_snow_state(
+            temp_c=current.get("temp_c", 0),
+            min_temp_c=today_day.get("mintemp_c", current.get("temp_c", 0)),
+            max_temp_c=today_day.get("maxtemp_c", current.get("temp_c", 0)),
+            humidity=current.get("humidity", 50),
+            snow_depth_cm=today_day.get("totalsnow_cm", 0.0),
+            snow_24h_cm=today_day.get("totalsnow_cm", 0.0),
+            wind_kph=current.get("wind_kph", 0),
+            cloud_cover=current.get("cloud", 0),
+            condition_text=current.get("condition", {}).get("text", ""),
+            prev_day_max_temp=today_day.get("maxtemp_c", current.get("temp_c", 0)),
+            totalprecip_mm=today_day.get("totalprecip_mm", 0.0),
+            will_it_snow=today_day.get("daily_will_it_snow", 0),
+            totalsnow_cm=today_day.get("totalsnow_cm", 0.0),
+        )
+    else:
+        weather_data["snow_state"] = {"status": "No snow data"}
+
+    snow_forecast = []
+    for i, day in enumerate(forecast_days):
+        day_info = day.get("day", {})
+        if i > 0:
+            prev_day_info = forecast_days[i - 1].get("day", {})
+            prev_day_max_temp = prev_day_info.get(
+                "maxtemp_c", day_info.get("avgtemp_c", 0)
+            )
+        else:
+            prev_day_max_temp = day_info.get("maxtemp_c", 0)
+
+        day_snow_state = WeatherService.get_snow_state(
+            temp_c=day_info.get("avgtemp_c", 0),
+            min_temp_c=day_info.get("mintemp_c", 0),
+            max_temp_c=day_info.get("maxtemp_c", 0),
+            humidity=day_info.get("avghumidity", 50),
+            snow_depth_cm=day_info.get("totalsnow_cm", 0.0),
+            snow_24h_cm=day_info.get("totalsnow_cm", 0.0),
+            wind_kph=day_info.get("maxwind_kph", 0),
+            cloud_cover=50,
+            condition_text=day_info.get("condition", {}).get("text", ""),
+            prev_day_max_temp=prev_day_max_temp,
+            totalprecip_mm=day_info.get("totalprecip_mm", 0.0),
+            will_it_snow=day_info.get("daily_will_it_snow", 0),
+            totalsnow_cm=day_info.get("totalsnow_cm", 0.0),
+        )
+        snow_forecast.append(
+            {
+                "date": day.get("date"),
+                "snow_state": day_snow_state,
+            }
+        )
+
+    weather_data["snow_forecast"] = snow_forecast
+    return weather_data

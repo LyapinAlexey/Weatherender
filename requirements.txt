@@ -1,28 +1,44 @@
+# --- WEB (Flask) ---
 Flask==3.0.3
-requests==2.32.3
-python-dotenv==1.0.1
 gunicorn==22.0.0
+gevent==26.8.0
+psycogreen==1.0.2
+flask-limiter==4.1.1
+flask-swagger-ui==5.32.9
+flask-talisman==1.1.0
+prometheus-flask-exporter==0.23.2
+apispec==6.10.0
+apispec-webframeworks==1.2.0
+
+# --- API (FastAPI) ---
+fastapi==0.141.1
+uvicorn==0.52.4
+
+# --- Shared: HTTP / networking ---
+requests==2.32.3
+httpx==0.28.1
+
+# --- Shared: database / ORM ---
 SQLAlchemy==2.0.35
 psycopg2-binary==2.9.12
 alembic==1.13.3
+
+# --- Shared: caching ---
+redis==8.1.0
+types-redis==4.6.0.20241004
+
+# --- Shared: validation / config ---
 marshmallow==3.22.0
-pytest==9.1.1
+python-dotenv==1.0.1
 python-dateutil==2.9.0
-flask-limiter==4.1.1
+types-python-dateutil==2.9.0.20260716
+
+# --- Scheduling ---
+apscheduler==3.11.3
+
+# --- Dev tooling ---
+pytest==9.1.1
 pytest-cov==7.1.0
 pre-commit==4.6.0
 mypy==2.3.0
 types-requests==2.33.0.20260712
-types-python-dateutil==2.9.0.20260716
-apispec==6.10.0
-apispec-webframeworks==1.2.0
-flask-swagger-ui==5.32.9
-flask-talisman==1.1.0
-prometheus-flask-exporter==0.23.2
-redis==8.1.0
-types-redis==4.6.0.20241004
-gevent==26.8.0
-psycogreen==1.0.2
-apscheduler==3.11.3
-fastapi==0.141.1
-httpx==0.28.1
