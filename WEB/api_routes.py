@@ -1,12 +1,16 @@
 from flask import Blueprint, request
 from marshmallow import ValidationError
 
+from models import SessionLocal, WeatherRequest
+
 try:
     from .extensions import limiter
     from .swagger_config import spec
 except ImportError:
     from swagger_config import spec  # type: ignore[no-redef]
     from extensions import limiter  # type: ignore[no-redef]
+
+from flask import g
 
 from schemas import CityRequestSchema
 from services import WeatherService
@@ -44,16 +48,50 @@ def get_weather():
         404:
           description: City not found
     """
+    if "db_session" not in g:
+        g.db_session = SessionLocal()
     schema = CityRequestSchema()
     data = request.args.to_dict()
     try:
         load_data = schema.load(data)
     except ValidationError as e:
+        error = "Error while fetching city: city must be a string and between 1 and 100 characters. City isn't valid"
+        info_valide_err = WeatherRequest(
+            city=(
+                data.get("city", "")
+                if (data.get("city") and len(data.get("city", "")) <= 100)
+                else (data.get("city") or "")[:95] + "..."
+            ),
+            source="api",
+            success=0,
+            error_message=error,
+        )
+        g.db_session.add(info_valide_err)
+        g.db_session.commit()
         return {"error": e.messages}, 400
     city = load_data["city"]
     weather_data = WeatherService.get_weather(city=city)
     if "error" in weather_data:
+        info_err = WeatherRequest(
+            city=str(city),
+            source="api",
+            success=0,
+            error_message=weather_data["error"].get("message"),
+        )
+        g.db_session.add(info_err)
+        g.db_session.commit()
         return {"error": weather_data["error"]}, 404
+    else:
+        info_suc = WeatherRequest(
+            city=str(city),
+            source="api",
+            temp_c=round(weather_data["current"]["temp_c"], 2),
+            condition=weather_data["current"]["condition"]["text"],
+            success=1,
+            error_message=None,
+        )
+        g.db_session.add(info_suc)
+        g.db_session.commit()
     forecast_days = weather_data.get("forecast", {}).get("forecastday", [])
     current = weather_data.get("current", {})
 
