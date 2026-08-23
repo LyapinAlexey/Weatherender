@@ -4,6 +4,14 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-23 — DB writes, health check, Dockerization for `API/`
+- Added DB write-on-request logging to `GET /api/weather` (sync) and `GET /api/v2/weather` (async), mirroring the existing pattern used by `/`. Both log `WeatherRequest` rows (success/error, `temp_c`/`condition` or `error_message`) with distinct `source` values (`"api"`, `"api-v2"`).
+- Added `API/async_db.py`: a new async SQLAlchemy engine (`create_async_engine` + `async_sessionmaker`, `asyncpg` driver) local to `API/` only — derives `ASYNC_DATABASE_URL` from the existing `Config.DATABASE_URL` by swapping the driver scheme to `postgresql+asyncpg://`.
+- Added `GET /api/v2/health`: async mirror of the sync `/health` endpoint, running a real `SELECT 1` through the new async engine.
+- **Refactor**: extracted `get_snow_state` out of `WeatherService` into a new standalone module `snow.py` at the repo root — it's a pure function with no I/O, so it never needed to be a class method. This decouples snow calculations from `services.py`'s module-level `cache_service = CacheService()` singleton, letting `API/` use `get_snow_state` without pulling in the sync Redis client it doesn't need. All call sites (`WEB/app.py`, `WEB/api_routes.py`, `API/main.py`) and tests updated accordingly.
+- Added `API/Dockerfile` (flat-copy style, matching `WEB/Dockerfile`) and a new `api` service in `docker-compose.yml`, mirroring `web`'s dependency structure (`weather_db`, `cache`, `migration`). Verified end-to-end via `docker-compose up --build`: `/api/v2/health` and `/api/v2/weather` both respond correctly through the Docker network.
+- Added `asyncpg` to `requirements.txt`.
+
 ## 2026-08-22 — New async FastAPI service (`API/`)
 - Added a new, fully separate third service (`API/`) alongside `WEB/` and `CLI/`, built on FastAPI + Uvicorn, sharing root-level `models.py`/`config.py`. `WEB/services.py` (sync, `requests`) stays completely untouched; `API/async_services.py` is a new, independent async mirror using `httpx.AsyncClient`.
 - Implemented `GET /api/v2/weather`: mirrors the existing sync `/api/weather` contract exactly — `city` is a required query parameter, no IP auto-detection, no elevation lookup (deferred; not in scope for v1). Also returns `snow_state`/`snow_forecast` (added to `/api/weather` on 2026-08-21), reusing `WeatherService.get_snow_state` directly — pure function, no I/O, safe to call from async code as-is.
