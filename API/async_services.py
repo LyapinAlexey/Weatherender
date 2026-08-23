@@ -2,7 +2,11 @@ import logging
 
 import httpx
 
-from API.async_cache import AsyncCacheService
+try:
+    from .async_cache import AsyncCacheService
+except ImportError:
+    from async_cache import AsyncCacheService  # type: ignore[no-redef]
+
 from config import Config
 
 logger = logging.getLogger(__name__)

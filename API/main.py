@@ -1,13 +1,21 @@
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 
 try:
+    from .async_db import AsyncSessionLocal
     from .async_services import AsyncWeatherService
 except ImportError:
     from async_services import AsyncWeatherService  # type: ignore[no-redef]
+    from async_db import AsyncSessionLocal  # type: ignore[no-redef]
 
+from models import WeatherRequest
 from services import WeatherService
 
 
@@ -27,7 +35,28 @@ async def get_weather_v2(request: Request, city: str = Query(...)) -> dict:
     client = request.app.state.http_client
     weather_data = await AsyncWeatherService.get_weather_async(client=client, city=city)
     if "error" in weather_data:
+        info_err = WeatherRequest(
+            city=str(city),
+            source="api-v2",
+            success=0,
+            error_message=weather_data["error"].get("message"),
+        )
+        async with AsyncSessionLocal() as session:
+            session.add(info_err)
+            await session.commit()
         raise HTTPException(status_code=404, detail=weather_data["error"])
+    else:
+        info_suc = WeatherRequest(
+            city=str(city),
+            source="api-v2",
+            temp_c=round(weather_data["current"]["temp_c"], 2),
+            condition=weather_data["current"]["condition"]["text"],
+            success=1,
+            error_message=None,
+        )
+        async with AsyncSessionLocal() as session:
+            session.add(info_suc)
+            await session.commit()
     forecast_days = weather_data.get("forecast", {}).get("forecastday", [])
     current = weather_data.get("current", {})
 
