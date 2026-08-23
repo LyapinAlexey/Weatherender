@@ -7,6 +7,9 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
+from sqlalchemy import text
+
+from snow import get_snow_state
 
 try:
     from .async_db import AsyncSessionLocal
@@ -15,8 +18,13 @@ except ImportError:
     from async_services import AsyncWeatherService  # type: ignore[no-redef]
     from async_db import AsyncSessionLocal  # type: ignore[no-redef]
 
+import logging
+
+from logging_config import setup_logging
 from models import WeatherRequest
-from services import WeatherService
+
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -62,7 +70,7 @@ async def get_weather_v2(request: Request, city: str = Query(...)) -> dict:
 
     if forecast_days:
         today_day = forecast_days[0].get("day", {})
-        weather_data["snow_state"] = WeatherService.get_snow_state(
+        weather_data["snow_state"] = get_snow_state(
             temp_c=current.get("temp_c", 0),
             min_temp_c=today_day.get("mintemp_c", current.get("temp_c", 0)),
             max_temp_c=today_day.get("maxtemp_c", current.get("temp_c", 0)),
@@ -91,7 +99,7 @@ async def get_weather_v2(request: Request, city: str = Query(...)) -> dict:
         else:
             prev_day_max_temp = day_info.get("maxtemp_c", 0)
 
-        day_snow_state = WeatherService.get_snow_state(
+        day_snow_state = get_snow_state(
             temp_c=day_info.get("avgtemp_c", 0),
             min_temp_c=day_info.get("mintemp_c", 0),
             max_temp_c=day_info.get("maxtemp_c", 0),
@@ -115,3 +123,15 @@ async def get_weather_v2(request: Request, city: str = Query(...)) -> dict:
 
     weather_data["snow_forecast"] = snow_forecast
     return weather_data
+
+
+@app.get("/api/v2/health")
+async def health_check() -> dict[str, str]:
+    async with AsyncSessionLocal() as session:
+        try:
+            await session.execute(text("SELECT 1"))
+            logger.info("Health check passed")
+            return {"status": "ok"}
+        except Exception:
+            logger.exception("Health check error")
+            raise HTTPException(status_code=503, detail="503 Service Unavailable")

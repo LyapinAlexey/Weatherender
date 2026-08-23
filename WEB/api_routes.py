@@ -14,6 +14,7 @@ from flask import g
 
 from schemas import CityRequestSchema
 from services import WeatherService
+from snow import get_snow_state
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -97,7 +98,7 @@ def get_weather():
 
     if forecast_days:
         today_day = forecast_days[0].get("day", {})
-        weather_data["snow_state"] = WeatherService.get_snow_state(
+        weather_data["snow_state"] = get_snow_state(
             temp_c=current.get("temp_c", 0),
             min_temp_c=today_day.get("mintemp_c", current.get("temp_c", 0)),
             max_temp_c=today_day.get("maxtemp_c", current.get("temp_c", 0)),
@@ -126,7 +127,7 @@ def get_weather():
         else:
             prev_day_max_temp = day_info.get("maxtemp_c", 0)
 
-        day_snow_state = WeatherService.get_snow_state(
+        day_snow_state = get_snow_state(
             temp_c=day_info.get("avgtemp_c", 0),
             min_temp_c=day_info.get("mintemp_c", 0),
             max_temp_c=day_info.get("maxtemp_c", 0),
