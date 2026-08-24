@@ -3,12 +3,12 @@
 Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices, has been developed by Alex Lyapin. The application provides current weather information, a 3-day forecast, and a unique Snow Surface Condition Index (SSCI) for skiers and outdoor enthusiasts.
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
-![Release](https://img.shields.io/github/v/release/LyapinAlexey/Weatherender?logo=python&logoColor=306998&link=https%3A%2F%2Fgithub.com%2FLyapinAlexey%2FWeatherender%2Freleases%2Flatest)
+[![Release](https://img.shields.io/github/v/release/LyapinAlexey/Weatherender?logo=python&logoColor=306998&link=https%3A%2F%2Fgithub.com%2FLyapinAlexey%2FWeatherender%2Freleases%2Flatest)](https://github.com/LyapinAlexey/Weatherender/releases/latest)
+[![Codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](https://codecov.io/github/LyapinAlexey/Weatherender)
+![License](https://img.shields.io/badge/SSCI-Custom_License-green) <br>
 ![Python](https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=306998)
 ![Flask](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
-![License](https://img.shields.io/badge/SSCI-Custom_License-green)
-[![Codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](https://codecov.io/github/LyapinAlexey/Weatherender)
 
 ## 🌐 Live Demo
 
