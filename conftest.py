@@ -1,10 +1,14 @@
 import os
 from typing import Any, Generator
 
+import httpx
 import pytest
+import pytest_asyncio
+from httpx import ASGITransport
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
+from API import app as api_app
 from models import Base
 from WEB import app as flask_app
 
@@ -76,3 +80,13 @@ def fake_weather_response() -> dict:
             ]
         },
     }
+
+
+@pytest_asyncio.fixture
+async def api_client():
+    async with api_app.router.lifespan_context(api_app):
+        transport = ASGITransport(app=api_app)
+        async with httpx.AsyncClient(
+            transport=transport, base_url="http://test"
+        ) as client:
+            yield client

@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-24 — `API/` test suite
+- Added `tests/test_api_routes.py`: async test suite for `API/` using `httpx.AsyncClient` + `ASGITransport` + `pytest-asyncio` (explicit `@pytest.mark.asyncio`, STRICT mode).
+- Added `api_client` fixture in `conftest.py`, wrapping app startup/shutdown via `app.router.lifespan_context(app)` so `lifespan`-managed state (`app.state.http_client`) is available in tests.
+- Covered: `/api/v2/health` (DB ok / DB error → 503), `/api/v2/weather` (success with snow_state/snow_forecast, city-not-found → 404, missing city → 422, empty-forecast edge case).
+- Mocking pattern for async SQLAlchemy sessions: `AsyncSessionLocal` patched as a plain `MagicMock` with `__aenter__`/`__aexit__` manually wired to an `AsyncMock` session (since `AsyncSessionLocal()` itself isn't awaited — only entering the `async with` block is).
+
 ## 2026-08-23 — DB writes, health check, Dockerization for `API/`
 - Added DB write-on-request logging to `GET /api/weather` (sync) and `GET /api/v2/weather` (async), mirroring the existing pattern used by `/`. Both log `WeatherRequest` rows (success/error, `temp_c`/`condition` or `error_message`) with distinct `source` values (`"api"`, `"api-v2"`).
 - Added `API/async_db.py`: a new async SQLAlchemy engine (`create_async_engine` + `async_sessionmaker`, `asyncpg` driver) local to `API/` only — derives `ASYNC_DATABASE_URL` from the existing `Config.DATABASE_URL` by swapping the driver scheme to `postgresql+asyncpg://`.
