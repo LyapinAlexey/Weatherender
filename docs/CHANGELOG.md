@@ -9,6 +9,10 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 - Added `api_client` fixture in `conftest.py`, wrapping app startup/shutdown via `app.router.lifespan_context(app)` so `lifespan`-managed state (`app.state.http_client`) is available in tests.
 - Covered: `/api/v2/health` (DB ok / DB error → 503), `/api/v2/weather` (success with snow_state/snow_forecast, city-not-found → 404, missing city → 422, empty-forecast edge case).
 - Mocking pattern for async SQLAlchemy sessions: `AsyncSessionLocal` patched as a plain `MagicMock` with `__aenter__`/`__aexit__` manually wired to an `AsyncMock` session (since `AsyncSessionLocal()` itself isn't awaited — only entering the `async with` block is).
+- Fixed: Resolved `AttributeError` caused by cross-module import singleton conflicts in `AsyncCacheService`. Swapped explicit event-loop initialization in `lifespan` for a thread-safe, lazy-loaded initialization pattern (`_get_client`).
+- Improved: Hardened cache data pipeline serialization safety by adding `default=str` helper within `json.dumps()` execution, safely coercing Pydantic dynamic objects and datetimes.
+- Added: Mounted explicit `/favicon.ico` endpoint utilizing `FileResponse` to handle automatic browser icon lookups natively.
+- Fixed: Corrected Docker image context build path for `favicon.png` targeting the web source asset directory (`WEB/static/images/favicon.png`) within `Dockerfile`.
 
 ## 2026-08-23 — DB writes, health check, Dockerization for `API/`
 - Added DB write-on-request logging to `GET /api/weather` (sync) and `GET /api/v2/weather` (async), mirroring the existing pattern used by `/`. Both log `WeatherRequest` rows (success/error, `temp_c`/`condition` or `error_message`) with distinct `source` values (`"api"`, `"api-v2"`).

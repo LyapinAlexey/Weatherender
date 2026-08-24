@@ -27,3 +27,5 @@ repos:
           - types-requests
           - types-python-dateutil
           - alembic
+          - types-redis
+          - types-requests

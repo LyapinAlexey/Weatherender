@@ -7,16 +7,19 @@ from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 
 from snow import get_snow_state
 
 try:
+    from .async_cache import cache_service
     from .async_db import AsyncSessionLocal
     from .async_services import AsyncWeatherService
 except ImportError:
     from async_services import AsyncWeatherService  # type: ignore[no-redef]
     from async_db import AsyncSessionLocal  # type: ignore[no-redef]
+    from async_cache import cache_service  # type: ignore[no-redef]
 
 import logging
 
@@ -33,6 +36,7 @@ async def lifespan(app):
     app.state.http_client = client
     yield
     await client.aclose()
+    await cache_service.close()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -135,3 +139,8 @@ async def health_check() -> dict[str, str]:
         except Exception:
             logger.exception("Health check error")
             raise HTTPException(status_code=503, detail="503 Service Unavailable")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("favicon.png")
