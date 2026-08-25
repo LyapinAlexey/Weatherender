@@ -13,10 +13,12 @@ try:
     from .api_routes import api_bp, get_weather
     from .extensions import limiter
     from .scheduler import init_scheduler
+    from .swagger_config import spec
 except ImportError:
     from api_routes import api_bp, get_weather  # type: ignore[no-redef]
     from extensions import limiter  # type: ignore[no-redef]
     from scheduler import init_scheduler  # type: ignore[no-redef]
+    from swagger_config import spec  # type: ignore[no-redef]
 
 from flask import Flask, g, render_template, request, session
 from flask_swagger_ui import get_swaggerui_blueprint
@@ -32,11 +34,6 @@ from models import SessionLocal, WeatherRequest
 from schemas import CityRequestSchema
 from services import WeatherService
 from snow import get_snow_state
-
-try:
-    from .swagger_config import spec
-except ImportError:
-    from swagger_config import spec  # type: ignore[no-redef]
 
 setup_logging()
 logger = logging.getLogger(__name__)

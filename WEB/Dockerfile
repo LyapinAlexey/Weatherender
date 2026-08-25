@@ -14,6 +14,7 @@ COPY WEB/api_routes.py /app
 COPY WEB/swagger_config.py /app
 COPY WEB/static /app/static
 COPY WEB/templates /app/templates
+COPY snow.py /app
 COPY alembic /app/alembic
 COPY alembic.ini /app
 COPY bg_class.py /app
