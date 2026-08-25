@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-25 – Dual-stack entry point via `WSGIMiddleware` & Docker optimization
+- Added: Integrated synchronous Flask `WEB.app` into FastAPI `API/main.py` using `fastapi.middleware.wsgi.WSGIMiddleware` (`app.mount("/", WSGIMiddleware(flask_app))`), enabling a unified ASGI process running both async `/api/v2/*` endpoints and sync UI/v1 routes under Uvicorn.
+- Changed: Standardized Docker builds by replacing multi-line flat file copies with context-wide `COPY . /app/` across `API/Dockerfile` and `WEB/Dockerfile`, ensuring entire package layouts (`API/` and `WEB/`) are preserved for cross-module imports.
+- Added: Root `.dockerignore` ignoring local caches (`__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`), coverage reports (`.coverage`), development configs (`.git`, `.github`, `.pre-commit-config.yaml`), local `.env` files, tests (`tests/`, `load_tests/`), and Markdown documentation to reduce image size and optimize layer caching.
+- Fixed: Resolved `ModuleNotFoundError` during container startup by adding explicit `WEB_DIR` path insertion into `sys.path` within `API/main.py` prior to importing Flask components.
+
 ## 2026-08-25 — Pydantic v2 validation for `/api/v2/weather` & Docker fix
 - Added: `API/schemas.py` with a `WeatherQueryParams` Pydantic v2 model, replacing the bare `city: str = Query(...)` parameter with `Annotated[WeatherQueryParams, Query()]` — enforces `city` length (1–100 chars) via `Field(...)` plus a `field_validator` rejecting blank/whitespace-only input (stripped and re-validated).
 - Added: test coverage in `tests/test_api_routes.py` for the new validation branches — blank city, whitespace-only city, and city over 100 characters (all `422`), alongside the pre-existing missing-city case.

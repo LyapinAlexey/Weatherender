@@ -1,17 +1,25 @@
-import os
 import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Annotated
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+WEB_DIR = ROOT_DIR / "WEB"
+
+for path in (ROOT_DIR, WEB_DIR):
+    if str(path) not in sys.path:
+        sys.path.append(str(path))
+
+import logging
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy import text
 
 from snow import get_snow_state
+from WEB.app import app as flask_app
 
 try:
     from .async_cache import cache_service
@@ -24,8 +32,6 @@ except ImportError:
     from async_cache import cache_service  # type: ignore[no-redef]
     from pydantic_schemas import WeatherQueryParams  # type: ignore[no-redef]
 
-import logging
-
 from logging_config import setup_logging
 from models import WeatherRequest
 
@@ -34,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app):
+async def lifespan(app: FastAPI):
     client = httpx.AsyncClient()
     app.state.http_client = client
     yield
@@ -151,3 +157,6 @@ async def health_check() -> dict[str, str]:
 async def favicon():
     """Created to fix the 404 icon error."""
     return FileResponse("favicon.png")
+
+
+app.mount("/", WSGIMiddleware(flask_app))
