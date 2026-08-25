@@ -49,11 +49,11 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `Flask`, `Gunicorn (gevent workers + psycogreen)`, `SQLAlchemy`, `Alembic`, `Marshmallow`, `Flask-Limiter`
+- **Backend:** `Python 3.13`, `FastAPI` (ASGI core), `Flask` (WSGI via `WSGIMiddleware`), `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy` (sync/async), `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`, `APScheduler (for db clear)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
-- **API & Docs:** `apispec`, `flask-swagger-ui (OpenAPI/Swagger)`
+- **API & Docs:** `FastAPI Auto Docs (Swagger/ReDoc)`, `apispec`, `flask-swagger-ui (OpenAPI 3.0)`
 - **Observability:** `prometheus-flask-exporter`, `structured JSON logging`
 - **Security:** `flask-talisman`
 - **Caching:** `Redis`, `redis-py`
@@ -89,6 +89,9 @@ The app exposes a JSON REST API alongside the web UI.
 
 | Endpoint             | Method | Description                                                |
 |----------------------|--------|------------------------------------------------------------|
+| `/api/v2/weather`	   | GET	  | High-performance Async API v2 with Pydantic validation     |
+| `/api/v2/health`	   | GET	  | Async DB health check                                      |
+| `/docs`	             | GET	  | Interactive FastAPI OpenAPI/Swagger documentation          |
 | `/api/weather`       | GET    | Get current weather + forecast for a city (`?city=Berlin`) |
 | `/api/apispec.json`  | GET    | Raw OpenAPI 3.0 specification                              |
 | `/health`            | GET    | Readiness check (verifies DB connectivity)                 |
@@ -165,12 +168,12 @@ This repository strictly adheres to professional enterprise software development
 The next major architectural evolution of **Weatherender** is fully planned:
 
 - [ ] **Dynamic Radar Maps:** Integrate interactive precipitation radar and dynamic weather maps using GIS/Leaflet tools to visualize snow and rain fronts
-- [ ] **Asynchronous API v2 (FastAPI Migration):** Design a high-performance `api/v2` microservice using **FastAPI** and asynchronous drivers (`asyncio`, `asyncpg`) to dramatically increase request throughput and study async patterns
+- [x] **Asynchronous API v2 (FastAPI Integration):** Designed a high-performance `api/v2` microservice using **FastAPI** (`asyncio`, `asyncpg`, `httpx`, `Pydantic v2`) mounted alongside Flask via `WSGIMiddleware`
 - [ ] **User Authentication & Custom Alerts:** Implement secure JWT or session-based user authentication via Supabase Auth, allowing skiers to save favorite resorts and customize automated notification limits
 
 ## Project Structure & Architecture
 
-Three top-level pieces share a common core: `WEB/` (Flask app + JSON API), `CLI/` (command-line tool), and shared modules (`services.py`, `models.py`, `cache.py`, `config.py`, `schemas.py`). Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Two main web components share a common core: `WEB/` (Flask app + v1 JSON API) and `API/` (FastAPI async v2 service), combined into a single ASGI process via `WSGIMiddleware` in `API/main.py`. The repository also includes `CLI/` (command-line tool) and shared modules (`services.py`, `models.py`, `cache.py`, `config.py`, `schemas.py`, `snow.py`). Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ![Project architecture](docs/architecture.svg)
 
