@@ -65,6 +65,22 @@ class TestApiRoutes:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
+    async def test_get_weather_v2_blank_city_returns_422(self, api_client):
+        response = await api_client.get("/api/v2/weather?city=")
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_get_weather_v2_city_all_spaces_returns_422(self, api_client):
+        response = await api_client.get("/api/v2/weather?city=%20%20%20")
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
+    async def test_get_weather_v2_city_too_long_returns_422(self, api_client):
+        city = "long" * 30
+        response = await api_client.get(f"/api/v2/weather?city={city}")
+        assert response.status_code == 422
+
+    @pytest.mark.asyncio
     @patch("API.main.AsyncSessionLocal")
     async def test_health_check_v2_db_error_returns_503(
         self, mock_session_local, api_client

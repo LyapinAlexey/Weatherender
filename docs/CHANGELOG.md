@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-25 — Pydantic v2 validation for `/api/v2/weather` & Docker fix
+- Added: `API/schemas.py` with a `WeatherQueryParams` Pydantic v2 model, replacing the bare `city: str = Query(...)` parameter with `Annotated[WeatherQueryParams, Query()]` — enforces `city` length (1–100 chars) via `Field(...)` plus a `field_validator` rejecting blank/whitespace-only input (stripped and re-validated).
+- Added: test coverage in `tests/test_api_routes.py` for the new validation branches — blank city, whitespace-only city, and city over 100 characters (all `422`), alongside the pre-existing missing-city case.
+- Fixed: `WEB/Dockerfile` was missing `COPY snow.py /app` after the earlier `get_snow_state` extraction refactor — caused gunicorn workers in the `web` container to crash with `ModuleNotFoundError` on `from snow import get_snow_state`. Verified both `web` and `api` containers start clean after the fix.
+- Fixed: `API/main.py`'s `/favicon.ico` route referenced `WEB/static/images/favicon.ico` despite `API/Dockerfile` copying files flat — adjusted the `COPY` to bring the favicon into the flat `API/` image layout (also fixed a `.png`/`.ico` extension mismatch along the way).
+
 ## 2026-08-24 — `API/` test suite
 - Added `tests/test_api_routes.py`: async test suite for `API/` using `httpx.AsyncClient` + `ASGITransport` + `pytest-asyncio` (explicit `@pytest.mark.asyncio`, STRICT mode).
 - Added `api_client` fixture in `conftest.py`, wrapping app startup/shutdown via `app.router.lifespan_context(app)` so `lifespan`-managed state (`app.state.http_client`) is available in tests.

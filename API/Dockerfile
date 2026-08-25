@@ -11,6 +11,7 @@ COPY API/main.py /api
 COPY API/async_db.py /api
 COPY API/async_cache.py /api
 COPY API/async_services.py /api
+COPY API/schemas.py /api
 COPY WEB/static/images/favicon.ico /api
 ENV PORT=8001
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
