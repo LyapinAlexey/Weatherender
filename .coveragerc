@@ -1,4 +1,10 @@
 [run]
 omit =
-    tests/*
-    venv/*
+    venv/**
+    tests/**
+    conftest.py
+    alembic/**
+    alembic.ini
+    logging_config.py
+    WEB/swagger_config.py
+    WEB/extensions.py
