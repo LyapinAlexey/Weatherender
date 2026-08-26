@@ -90,3 +90,22 @@ async def api_client():
             transport=transport, base_url="http://test"
         ) as client:
             yield client
+
+
+@pytest.fixture(autouse=True)
+async def reset_cache_client():
+    from API.async_cache import cache_service
+
+    if cache_service.client is not None:
+        try:
+            await cache_service.close()
+        except Exception:
+            pass
+        cache_service.client = None
+    yield
+    if cache_service.client is not None:
+        try:
+            await cache_service.close()
+        except Exception:
+            pass
+        cache_service.client = None
