@@ -34,7 +34,16 @@
                 <p><strong>☀️ Current UV Index:</strong> {{ weather.current.uv }}</p>
                 <p><strong>⏲ Current Pressure:</strong> {{ (weather.current.pressure_mb * 0.750062)|round|int }} mmHg</p>
                 <p><strong>💧 Humidity:</strong> {{ weather.current.humidity }}%</p>
-                <p><strong>⛷️ Snow Condition:</strong> <span id="snow-status">{{ snow_info.status }}</span></p>
+                <p>
+                    <strong>⛷️ Snow Condition:</strong>
+                    <span id="snow-status">
+                        {% if snow_info is defined and snow_info %}
+                            {{ snow_info.status }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </p>
             </div>
         {% endif %}
     </div>
