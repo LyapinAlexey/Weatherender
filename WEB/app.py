@@ -120,7 +120,6 @@ def index() -> str:
                         if (city and len(city) <= 100)
                         else (city or "")[:95] + "..."
                     ),
-                    coordinates=None,
                     source="web",
                     success=0,
                     error_message=error,
@@ -188,7 +187,6 @@ def index() -> str:
             )
             info_err = WeatherRequest(
                 city=str(query_param),
-                coordinates=None,
                 source="web",
                 success=0,
                 error_message=data["error"].get("message"),
@@ -210,14 +208,8 @@ def index() -> str:
                 city=query_param,
             )
         else:
-            location_info = data.get("location", {})
-            real_city_name = location_info.get("name", str(query_param))
-            lat = location_info.get("lat")
-            lon = location_info.get("lon")
-            coords_str = f"{lat},{lon}" if lat is not None and lon is not None else None
             info_suc = WeatherRequest(
-                city=real_city_name,
-                coordinates=coords_str,
+                city=city,
                 source="web",
                 temp_c=round(data["current"]["temp_c"], 2),
                 condition=data["current"]["condition"]["text"],

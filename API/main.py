@@ -63,7 +63,6 @@ async def get_weather_v2(
     if "error" in weather_data:
         info_err = WeatherRequest(
             city=str(city),
-            coordinates=None,
             source="api-v2",
             success=0,
             error_message=weather_data["error"].get("message"),
@@ -73,15 +72,8 @@ async def get_weather_v2(
             await session.commit()
         raise HTTPException(status_code=404, detail=weather_data["error"])
     else:
-        location_info = weather_data.get("location", {})
-        real_city_name = location_info.get("name", str(city))
-
-        lat = location_info.get("lat")
-        lon = location_info.get("lon")
-        coords_str = f"{lat},{lon}" if lat is not None and lon is not None else None
         info_suc = WeatherRequest(
-            city=real_city_name,
-            coordinates=coords_str,
+            city=city,
             source="api-v2",
             temp_c=round(weather_data["current"]["temp_c"], 2),
             condition=weather_data["current"]["condition"]["text"],

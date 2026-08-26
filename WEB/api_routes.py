@@ -64,7 +64,6 @@ def get_weather():
                 if (raw_city and len(raw_city) <= 100)
                 else (raw_city or "")[:95] + "..."
             ),
-            coordinates=None,
             source="api",
             success=0,
             error_message=error,
@@ -77,7 +76,6 @@ def get_weather():
     if "error" in weather_data:
         info_err = WeatherRequest(
             city=str(city),
-            coordinates=None,
             source="api",
             success=0,
             error_message=weather_data["error"].get("message"),
@@ -86,14 +84,8 @@ def get_weather():
         g.db_session.commit()
         return {"error": weather_data["error"]}, 404
     else:
-        location_info = weather_data.get("location", {})
-        real_city_name = location_info.get("name", str(city))
-        lat = location_info.get("lat")
-        lon = location_info.get("lon")
-        coords_str = f"{lat},{lon}" if lat is not None and lon is not None else None
         info_suc = WeatherRequest(
-            city=real_city_name,
-            coordinates=coords_str,
+            city=city,
             source="api",
             temp_c=round(weather_data["current"]["temp_c"], 2),
             condition=weather_data["current"]["condition"]["text"],
