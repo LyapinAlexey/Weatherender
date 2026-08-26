@@ -11,17 +11,24 @@ cache_service = CacheService()
 
 class WeatherService:
     @staticmethod
-    def get_elevation(lat: float, lon: float):
+    def get_elevation(lat: float, lon: float) -> float:
+        cache_key = f"elevation:{lat}:{lon}"
+        cached_val = cache_service.get(cache_key)
+        if cached_val is not None:
+            return float(cached_val)
         try:
             url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
-            response = requests.get(url, timeout=3)
+            response = requests.get(url, timeout=6)
             if response.status_code == 200:
                 data = response.json()
                 results = data.get("results", [])
                 if results:
-                    return float(results[0].get("elevation", 0.0))
+                    elevation = float(results[0].get("elevation", 0.0))
+                    cache_service.set(cache_key, elevation, ttl=86400)
+                    return elevation
         except Exception as e:
-            logger.error(f"Elevation API Error: {e}")
+            logger.warning(f"Elevation API Error: {e}")
+
         return 0.0
 
     @staticmethod
