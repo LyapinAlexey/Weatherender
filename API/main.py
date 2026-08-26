@@ -13,8 +13,8 @@ for path in (ROOT_DIR, WEB_DIR):
 import logging
 
 import httpx
+from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.responses import FileResponse
 from sqlalchemy import text
 
@@ -159,4 +159,4 @@ async def favicon() -> FileResponse:
     return FileResponse("favicon.png")
 
 
-app.mount("/", WSGIMiddleware(flask_app))
+app.mount("/wsgi-app", WSGIMiddleware(flask_app))
