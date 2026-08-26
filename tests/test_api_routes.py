@@ -111,3 +111,38 @@ class TestApiRoutes:
         assert response.status_code == 200
         assert data["snow_state"]["status"] == "No snow data"
         assert data["snow_forecast"] == []
+
+    @pytest.mark.asyncio
+    @patch("API.main.AsyncSessionLocal")
+    @patch("API.main.AsyncWeatherService.get_weather_async")
+    async def test_get_weather_v2_not_found(
+        self, mock_get_weather, mock_session_local, api_client
+    ):
+        mock_session = AsyncMock()
+        mock_session.add = MagicMock()
+        mock_session_local.return_value.__aenter__.return_value = mock_session
+        mock_session_local.return_value.__aexit__.return_value = None
+
+        mock_get_weather.return_value = {"error": {"message": "City not found"}}
+
+        response = await api_client.get("/api/v2/weather?city=UnknownCity123")
+        assert response.status_code == 404
+
+    @pytest.mark.asyncio
+    @patch("API.main.AsyncSessionLocal")
+    async def test_health_v2_success(self, mock_session_local, api_client):
+        mock_session = AsyncMock()
+        mock_session_local.return_value.__aenter__.return_value = mock_session
+        mock_session_local.return_value.__aexit__.return_value = None
+        response = await api_client.get("/api/v2/health")
+        assert response.status_code == 200
+
+    @pytest.mark.asyncio
+    @patch("API.main.AsyncSessionLocal")
+    async def test_health_v2_error(self, mock_session_local, api_client):
+        mock_session = AsyncMock()
+        mock_session.execute.side_effect = Exception("DB down")
+        mock_session_local.return_value.__aenter__.return_value = mock_session
+        mock_session_local.return_value.__aexit__.return_value = None
+        response = await api_client.get("/api/v2/health")
+        assert response.status_code == 503
