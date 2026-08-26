@@ -33,7 +33,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 📍 Automatic city detection by IP (with fallback chain: ip-api.com → ipinfo.io)
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
 - 🧹 Automated DB cleanup: Background storage rotation powered by `APScheduler` (running weekly with a file-lock mechanism to prevent duplicate worker triggers) to safely stay within DB limits.
-- ✅ Input validation with Marshmallow
+- ✅ Input validation with Marshmallow (sync) and pydantic v2 (async)
 - 🚦 Rate limiting (flask-limiter)
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
@@ -49,7 +49,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `FastAPI` (ASGI core), `Flask` (WSGI via `WSGIMiddleware`), `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy` (sync/async), `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`
+- **Backend:** `Python 3.13`, `FastAPI (ASGI core)`, `Flask WSGI via WSGIMiddleware`, `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy (sync/async)`, `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`, `APScheduler (for db clear)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
