@@ -159,4 +159,4 @@ async def favicon() -> FileResponse:
     return FileResponse("favicon.png")
 
 
-app.mount("/wsgi-app", WSGIMiddleware(flask_app))
+app.mount("/", WSGIMiddleware(flask_app))

@@ -17,17 +17,17 @@ class WeatherService:
         if cached_val is not None:
             return float(cached_val)
         try:
-            url = f"https://api.open-elevation.com/api/v1/lookup?locations={lat},{lon}"
-            response = requests.get(url, timeout=6)
+            url = f"https://api.open-meteo.com/v1/elevation?latitude={lat}&longitude={lon}"
+            response = requests.get(url, timeout=3)
             if response.status_code == 200:
                 data = response.json()
-                results = data.get("results", [])
-                if results:
-                    elevation = float(results[0].get("elevation", 0.0))
+                elevations = data.get("elevation", [])
+                if elevations:
+                    elevation = float(elevations[0])
                     cache_service.set(cache_key, elevation, ttl=86400)
                     return elevation
         except Exception as e:
-            logger.warning(f"Elevation API Error: {e}")
+            logger.warning(f"Open-meteo elevation API Error: {e}")
 
         return 0.0
 
