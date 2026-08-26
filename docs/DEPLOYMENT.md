@@ -52,7 +52,7 @@ If Redis is unreachable, the app catches the error and falls back to fetching fr
 
 ## 4. Application Deployment (Render)
 
-1. Create a **Web Service** on Render, Docker runtime, pointing at `WEB/Dockerfile`, with build context `.` (repo root — the Dockerfile's `COPY` paths assume this).
+1. Create a **Web Service** on Render, Docker runtime, pointing at `API/Dockerfile`, with build context `.` (repo root — the Dockerfile's `COPY . /app/` requires the full repo tree). `API/Dockerfile` is the **sole deployment image** — it starts an ASGI process (`uvicorn API.main:app`) that serves the async FastAPI routes directly and mounts the entire synchronous Flask app (`WEB/app.py`) via `WSGIMiddleware` at `/`. `WEB/Dockerfile` still exists and is still built by `docker-compose` for local development, but it is not what Render deploys.
 2. Set the following environment variables:
 
    | Variable | Example / Notes |
@@ -66,16 +66,22 @@ If Redis is unreachable, the app catches the error and falls back to fetching fr
    | `LOG_LEVEL` | `INFO` |
 
 3. Render auto-deploys on every push to `main`. Deployment is gated by CI — GitHub Actions must pass (Ruff, Mypy, full Pytest suite) before the deploy webhook fires.
-4. After the first deploy, confirm `/health` returns `{"status": "ok"}` and that a real weather request writes a row into Supabase's `weather_requests` table (visible in the Table Editor).
+4. After the first deploy, confirm both `/api/v2/health` (async) and `/health` (sync, served through the mounted Flask app) return `{"status": "ok"}`, and that a real weather request against either `/api/v2/weather` or `/api/weather` (proxied via `WSGIMiddleware`) writes a row into Supabase's `weather_requests` table.
 
 ### Dynamic port binding
 
-Render assigns its own `$PORT` at runtime; it is **not** fixed. This requires:
+Render assigns its own `$PORT` at runtime; it is **not** fixed. `API/Dockerfile` handles this with:
 ```dockerfile
-ENV PORT=5001
-CMD gunicorn app:app --worker-class gevent --worker-connections 50 -w 8 -b 0.0.0.0:${PORT}
+ENV PORT=8001
+CMD uvicorn API.main:app --host 0.0.0.0 --port ${PORT} --workers 4
 ```
-Note the **shell form** of `CMD` (no `[...]` array syntax) — exec form does not expand environment variables, so `${PORT}` would be passed through literally rather than substituted. `HEALTHCHECK` uses the same pattern.
+`HEALTHCHECK` uses the same `${PORT}` variable. Note `uvicorn`'s CLI expands the shell variable the same way Gunicorn's shell-form `CMD` does — no array/exec-form syntax here either.
+
+### Why one image serves both stacks
+
+`WEB/` and `API/` remain two separate codebases with two separate `Dockerfile`s, built independently by `docker-compose` for local development (two containers, two ports). But Render's free tier only supports one active web service without added cost, so for production, `API/main.py` imports the Flask app object directly (`from WEB.app import app as flask_app`) and mounts it under FastAPI via `fastapi.middleware.wsgi.WSGIMiddleware`, exposing both the async v2 API and the full legacy v1 Flask app (including the HTML UI, `/health`, `/metrics`, `/apidocs`) from a single `uvicorn` process. Locally, both containers still exist side-by-side for isolated development and testing; only the Render deployment target changed.
+
+This also drove two related fixes documented in the CHANGELOG: `API/schemas.py` was renamed to `API/pydantic_schemas.py` (a bare `import schemas` was resolving to `WEB/schemas.py`'s Marshmallow schema once both `ROOT_DIR` and `WEB_DIR` were added to `sys.path`), and both Dockerfiles switched from per-file `COPY` to `COPY . /app/` with a shared root `.dockerignore`, since `API/Dockerfile` now needs the entire `WEB/` package tree, not just its own flat file list.
 
 ---
 

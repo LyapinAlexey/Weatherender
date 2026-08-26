@@ -115,24 +115,26 @@ The application has been load, stress, and spike tested with [k6](https://k6.io/
 
 ### Running Load Tests Locally
 
-You can replicate the performance benchmarks locally using the pre-configured Docker Compose stack. Run any of the following commands from the root directory:
+k6 must be installed locally (it isn't bundled as a Docker Compose service). Smoke and load tests target the live Render deployment directly; stress and spike tests require the local stack running first.
 
-#### 1. Smoke Test (Verify basic API stability)
+#### 1. Smoke Test (Render — verify the live deployment is alive and stable)
 ```bash
-docker compose run --rm k6 run /load_tests/smoke_test.js
+k6 run load_tests/smoke.js
 ```
-#### 2. Load Test (Simulate regular daily traffic)
+#### 2. Load Test (Render — realistic traffic across all endpoints)
 ```bash
-docker compose run --rm k6 run /load_tests/load_test.js
+k6 run load_tests/load.js
 ```
 
-#### 3. Stress Test (Find the system's breaking point) — [running locally](#quick-start-docker)
+#### 3. Stress Test (local — find the system's breaking point) — [running locally](#quick-start-docker)
 ```bash
-docker compose run --rm k6 run /load_tests/stress_test.js
+docker compose up -d
+k6 run load_tests/stress.js
 ```
-#### 4. Spike Test (Validate resilience against sudden traffic bursts) — [running locally](#quick-start-docker)
+#### 4. Spike Test (local — validate resilience against sudden traffic bursts) — [running locally](#quick-start-docker)
 ```bash
-docker compose run --rm k6 run /load_tests/spike_test.js
+docker compose up -d
+k6 run load_tests/spike.js
 ```
 
 ## Further Documentation

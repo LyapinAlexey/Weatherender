@@ -154,7 +154,7 @@ async def health_check() -> dict[str, str]:
 
 
 @app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
+async def favicon() -> FileResponse:
     """Created to fix the 404 icon error."""
     return FileResponse("favicon.png")
 
