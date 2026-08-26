@@ -27,7 +27,7 @@ This document details the high-level architecture, design patterns, component in
 | **Database & ORM** | PostgreSQL (Supabase in Prod), SQLAlchemy, Alembic |
 | **Caching Layer** | Redis / Upstash Redis (`redis-py`) |
 | **Validation & Docs** | Marshmallow, `apispec`, `flask-swagger-ui` (OpenAPI 3.0) |
-| **Security & Rate Limiting**| `flask-talisman` (Headers), `Flask-Limiter` |
+| **Security & Rate Limiting**| `flask-talisman (Headers)`, `Flask-Limiter (v1)`, `SlowAPI (v2)` |
 | **Observability** | `prometheus-flask-exporter`, Structured JSON Logging |
 | **DevOps & Hosting** | Docker, Docker Compose, GitHub Actions, Render (Web Host), UptimeRobot (Heartbeat) |
 | **Testing & Performance**| Pytest, `unittest.mock`, Codecov, k6 (Load Testing) |
@@ -62,6 +62,7 @@ Weatherender/
 │   └── pydantic_schemas.py  # Pydantic v2 query validation (renamed from schemas.py — see DEPLOYMENT.md)
 ├── alembic/                # Database migration scripts and environment config
 ├── schemas.py              # Marshmallow input validation and output serialization schemas
+├── scripts/                # Shell scripts
 ├── services.py              # Shared business logic, external API integration & IP fallback chain
 ├── cache.py                # Redis caching layer (TTL execution & graceful fallback)
 ├── dbclear.py               # Deletes WeatherRequest rows older than 30 days; invoked by scheduler.py
@@ -88,7 +89,7 @@ Weatherender/
 - **`schemas.py`**: Strictly validates incoming query parameters (e.g., city names) and standardizes API output formats using Marshmallow.
 
 ### 🔹 Async API Layer (`API/`)
-- **`main.py`**: FastAPI ASGI app exposing `/api/v2/weather` and `/api/v2/health`. `city` is validated via `Annotated[WeatherQueryParams, Query()]` (`pydantic_schemas.py`) rather than a bare `Query(...)` — 1–100 characters, blank/whitespace-only rejected. Mounts the entire synchronous `WEB/app.py` Flask app at `/` via `fastapi.middleware.wsgi.WSGIMiddleware`, making this the single process Render deploys.
+- **`main.py`**: FastAPI ASGI app exposing `/api/v2/weather` and `/api/v2/health`. `city` is validated via `Annotated[WeatherQueryParams, Query()]` (`pydantic_schemas.py`) rather than a bare `Query(...)` — 1–100 characters, blank/whitespace-only rejected. Rate limiting is enforced on `GET /api/v2/weather` via `slowapi` (25 req/min per IP). Mounts the entire synchronous `WEB/app.py` Flask app at `/` via `fastapi.middleware.wsgi.WSGIMiddleware`, making this the single process Render deploys.
 - **`async_services.py` / `async_cache.py` / `async_db.py`**: async counterparts to `services.py`, `cache.py`, and the sync engine in `models.py`, built on `httpx.AsyncClient`, `redis.asyncio`, and `create_async_engine` (asyncpg) respectively — intentionally separate from the sync stack rather than shared, per the project's async/sync isolation decision.
 - **`pydantic_schemas.py`**: Pydantic v2 equivalent of `schemas.py`'s Marshmallow validation, scoped to `API/` only.
 
@@ -165,13 +166,13 @@ There are two distinct request paths that write different amounts of data — th
                                                             [ Return JSON ]
 ```
 
-### Async JSON API (`/api/v2/weather`) — writes a request record on every call, fully async
+### Async JSON API (/api/v2/weather) — writes a request record on every call, fully async
 
 ```text
  Client (async API consumer)
         │
         ▼
- [ API Layer: main.py ] ───(no rate limiter — bypasses flask-limiter entirely)
+ [ API Layer: main.py ] ───(Rate Limiter: slowapi 25/min per IP)
         │
         ▼
  [ Validation Layer ] ───(Pydantic v2 validation in pydantic_schemas.py)
@@ -191,7 +192,6 @@ There are two distinct request paths that write different amounts of data — th
                                                                                  ▼
                                                                        [ Return JSON ]
 ```
-
 ---
 
 ## 6. Infrastructure, Observability & Cloud Deployment

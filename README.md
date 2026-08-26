@@ -34,10 +34,10 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
 - 🧹 Automated DB cleanup: Background storage rotation powered by `APScheduler` (running weekly with a file-lock mechanism to prevent duplicate worker triggers) to safely stay within DB limits.
 - ✅ Input validation with Marshmallow (sync) and pydantic v2 (async)
-- 🚦 Rate limiting (flask-limiter)
+- 🚦 Rate limiting (flask-limiter for v1, slowapi for v2)
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
-- 🧪 120+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
+- 🧪 118+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
 - 🔌 JSON REST API (`/api/weather`) with interactive Swagger/OpenAPI docs
 - ⚡ Redis caching for WeatherAPI responses (TTL-based, graceful fallback on Redis unavailability)
 - 📊 Prometheus metrics endpoint (`/metrics`) for observability
@@ -49,7 +49,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `FastAPI (ASGI core)`, `Flask WSGI via WSGIMiddleware`, `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy (sync/async)`, `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`
+- **Backend:** `Python 3.13`, `FastAPI (ASGI core)`, `Flask WSGI via WSGIMiddleware`, `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy (sync/async)`, `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`, `SlowAPI`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`, `APScheduler (for db clear)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
@@ -89,7 +89,7 @@ The app exposes a JSON REST API alongside the web UI.
 
 | Endpoint             | Method | Description                                                |
 |----------------------|--------|------------------------------------------------------------|
-| `/api/v2/weather`	   | GET	  | High-performance Async API v2 with Pydantic validation     |
+| `/api/v2/weather`	   | GET	  | High-performance Async API v2 with Pydantic validation (Rate limited: 25 req/min)     |
 | `/api/v2/health`	   | GET	  | Async DB health check                                      |
 | `/docs`	             | GET	  | Interactive FastAPI OpenAPI/Swagger documentation          |
 | `/api/weather`       | GET    | Get current weather + forecast for a city (`?city=Berlin`) |
