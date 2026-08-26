@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-26 — FastAPI v2 Rate Limiting and Route Test Suite Cleanup
+- Added: Integrated `slowapi` rate limiter into `API/main.py`, restricting `GET /api/v2/weather` requests to **25 per minute** per process/IP to match Flask v1 safety boundaries.
+- Added: Implemented `test_get_weather_v2_rate_limit` in `tests/test_api_routes.py` to verify asynchronous HTTP 429 response enforcement when threshold is exceeded.
+- Refactored: Cleaned up `tests/test_api_routes.py` by removing redundant v2 health-check and 404 test duplicates, relocating edge-case tests inside `TestApiRoutes`, and fixing import aliases.
+- Updated: Documented FastAPI rate limiting parameters and 429 response status codes in `docs/API.md`.
+
 ## 2026-08-26 — Async test suite and Mocking refactor for Weatherender
 - Added: Comprehensive asynchronous unit and integration tests (`test_api_cache.py`, `test_api_services.py`) covering Redis caching operations and `httpx`-based asynchronous weather service endpoints.
 - Refactored: Integrated **`respx`** for intercepting and mocking `httpx` requests in async services, matching the production-grade architecture of the FastAPI / Flask single-image deployment.

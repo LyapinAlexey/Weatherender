@@ -66,7 +66,7 @@ If Redis is unreachable, the app catches the error and falls back to fetching fr
    | `LOG_LEVEL` | `INFO` |
 
 3. Render auto-deploys on every push to `main`. Deployment is gated by CI — GitHub Actions must pass (Ruff, Mypy, full Pytest suite) before the deploy webhook fires.
-4. After the first deploy, confirm both `/api/v2/health` (async) and `/health` (sync, served through the mounted Flask app) return `{"status": "ok"}`, and that a real weather request against either `/api/v2/weather` or `/api/weather` (proxied via `WSGIMiddleware`) writes a row into Supabase's `weather_requests` table.
+4. After the first deploy, confirm both `/api/v2/health` (async) and `/health` (sync, served through the mounted Flask app) return `{"status": "ok"}`, and that a real weather request against either `/api/v2/weather` or `/api/weather` (proxied via `WSGIMiddleware`) writes a row into Supabase's `weather_requests` table. Also verify that sending more than 25 requests per minute to `/api/v2/weather` correctly triggers an HTTP `429 Too Many Requests` response enforced by `slowapi`.
 
 ### Dynamic port binding
 

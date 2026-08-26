@@ -16,6 +16,9 @@ import httpx
 from a2wsgi import WSGIMiddleware
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 
 from snow import get_snow_state
@@ -35,6 +38,7 @@ except ImportError:
 from logging_config import setup_logging
 from models import WeatherRequest
 
+limiter = Limiter(key_func=get_remote_address)
 setup_logging()
 logger = logging.getLogger(__name__)
 
@@ -51,9 +55,12 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.get("/api/v2/weather")
+@limiter.limit("25/minute")
 async def get_weather_v2(
     request: Request, params: Annotated[WeatherQueryParams, Query()]
 ) -> dict:

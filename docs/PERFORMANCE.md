@@ -6,7 +6,7 @@ Load testing is done with [k6](https://k6.io/). Scripts live in `load_tests/`.
 
 Two environments are used, on purpose:
 
-- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure or tripping the web route's rate limiter (`25 per minute` per IP, on `/` only — the `/api/*` routes hit by these scripts aren't currently rate-limited).
+- **Smoke & load tests** run against the **live Render deployment** (`weather-7icc.onrender.com`), with a conservative number of virtual users (VUs). This gives real-world numbers — actual network latency, free-tier CPU limits, cold-start behavior — without risking the free-tier infrastructure. Note that `/api/v2/weather` enforces a rate limit of **25 requests/min per IP** via `slowapi`, so live load tests are tuned to run below this threshold to avoid false-positive HTTP 429 errors.
 - **Stress & spike tests** run only **locally** against `docker compose` (`localhost:5001` for sync `web`, `localhost:8001` for async `api`), where nothing is rate-limited or resource-capped by a third party. This is where the application is deliberately pushed past its limits.
 
 | Script            | Target                  | VUs (peak) | Purpose                                      |
@@ -164,6 +164,7 @@ engine = create_async_engine(
 1. **`httpx.AsyncClient` connection limits.** The shared client in `API/main.py`'s `lifespan` is constructed with no explicit `httpx.Limits(...)`. httpx's defaults (100 max connections, 20 max keepalive connections) haven't been tested against these concurrency levels — this is the most direct analogue to the DB-pool fix above and the next candidate to try.
 2. **Render-side noise.** The Load v2 regression (8.59% → 11.52%) needs at least 2-3 repeat runs before concluding it's real rather than free-tier variance, following the same practice used for the v1 gevent numbers.
 3. **`WSGIMiddleware` presence.** Not yet isolated whether merely importing/mounting `WEB.app` inside the same process has any measurable effect on the async routes, even when a test run never calls a sync route directly.
+4. **SlowAPI Rate Limiting on v2 routes.** `/api/v2/weather` is constrained to 25 requests/min per IP. During high-VU stress/spike tests, requests exceeding this window are rejected with HTTP 429, which contributes to the observed `http_req_failed` metrics on v2.
 
 ## Summary
 
