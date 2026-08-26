@@ -18,6 +18,7 @@ class WeatherRequest(Base):
 
     id = Column(Integer, primary_key=True)
     city = Column(String(100), nullable=False)
+    coordinates = Column(String(50), nullable=True)
     source = Column(String(10), nullable=False)
     temp_c = Column(Float, nullable=True)
     condition = Column(String(100), nullable=True)
