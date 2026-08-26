@@ -1,6 +1,6 @@
 import pytest
 
-from services import WeatherService
+from snow import get_snow_state
 
 
 @pytest.mark.parametrize(  # Parametrized tests
@@ -126,5 +126,5 @@ from services import WeatherService
     ],
 )
 def test_get_snow_state(params, expected_status):
-    result = WeatherService.get_snow_state(**params)
+    result = get_snow_state(**params)
     assert result["status"] == expected_status

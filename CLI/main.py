@@ -4,15 +4,14 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 import platform
-import random
 import subprocess
 from datetime import datetime
 
 from config import Config
-from dbclear import clear
 from logging_config import setup_logging
 from models import SessionLocal, WeatherRequest
 from services import WeatherService
+from snow import get_snow_state
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -86,14 +85,44 @@ class WeatherReport:
             print(
                 f" City: {BOLD}{self.loc['name']}{RESET} ({BOLD}{self.loc['country']}{RESET})"
             )
+
+        curr_day = (
+            self.data["forecast"]["forecastday"][0]["day"]
+            if "forecast" in self.data
+            else {}
+        )
+        curr_hour = (
+            self.data["forecast"]["forecastday"][0]["hour"][0]
+            if "forecast" in self.data
+            and self.data["forecast"]["forecastday"][0]["hour"]
+            else {}
+        )
+
+        snow_info = get_snow_state(
+            temp_c=self.curr.get("temp_c", 0.0),
+            min_temp_c=curr_day.get("mintemp_c", 0.0),
+            max_temp_c=curr_day.get("maxtemp_c", 0.0),
+            humidity=self.curr.get("humidity", 50),
+            snow_depth_cm=curr_day.get("totalsnow_cm", 0.0),
+            snow_24h_cm=curr_day.get("totalsnow_cm", 0.0),
+            wind_kph=self.curr.get("wind_kph", 0.0),
+            cloud_cover=self.curr.get("cloud", 0),
+            condition_text=self.curr.get("condition", {}).get("text", ""),
+            prev_day_max_temp=curr_day.get("maxtemp_c", 0.0),
+            totalprecip_mm=curr_day.get("totalprecip_mm", 0.0),
+            will_it_snow=curr_hour.get("will_it_snow", 0),
+            totalsnow_cm=curr_day.get("totalsnow_cm", 0.0),
+        )
+
         t_out, uv_out, p_out, wind_out, rain_out = self.get_color_metrics()
         print(
-            f" Current temperature: {t_out}\n Current UV index: {uv_out}\n"
+            f" Current temperature: {t_out}\n"
+            f" Current UV index: {uv_out}\n"
             f" Precipitation chance: {rain_out}\n"
             f" Current pressure: {p_out}\n"
             f" Wind: {wind_out}\n"
-            f" UV-index: {uv_out}\n"
             f" Current weather: {self.curr['condition']['text']}\n"
+            f" Snow conditions: {BOLD}{snow_info['status']}{RESET if not self.for_printing else ''}\n"
             + "-" * self.line_len
         )
         print(" Forecast for 24 hours:\n")
@@ -117,9 +146,10 @@ class WeatherReport:
             )
         print("-" * self.line_len + "\n 3-Day Forecast:\n")
         print(
-            f" {'Date':<5} | {'Max Temp':<8} | {'Rain Chance':<11} | {'Max UV-index':<8} | {'Wind gusts':<6}"
+            f" {'Date':<5} | {'Max Temp':<8} | {'Rain Chance':<11} | {'Max UV-index':<8} | {'Wind gusts':<6} | {'Snow State':<18}"
         )
         print("-" * self.line_len)
+
         for day in self.data["forecast"]["forecastday"]:
             date_obj = datetime.strptime(day["date"], "%Y-%m-%d")
             formatted_date = date_obj.strftime("%d.%m")
@@ -127,8 +157,23 @@ class WeatherReport:
             pop = f"{day['day']['daily_chance_of_rain']}%"
             maxuv = round(day["day"]["uv"])
             gusts = f"{day['day']['maxwind_kph']} km/h"
+            day_snow = get_snow_state(
+                temp_c=day["day"]["avgtemp_c"],
+                min_temp_c=day["day"]["mintemp_c"],
+                max_temp_c=day["day"]["maxtemp_c"],
+                humidity=day["day"].get("avghumidity", 50),
+                snow_depth_cm=day["day"].get("totalsnow_cm", 0.0),
+                snow_24h_cm=day["day"].get("totalsnow_cm", 0.0),
+                wind_kph=day["day"]["maxwind_kph"],
+                cloud_cover=50,
+                condition_text=day["day"]["condition"]["text"],
+                prev_day_max_temp=day["day"]["maxtemp_c"],
+                totalprecip_mm=day["day"]["totalprecip_mm"],
+                will_it_snow=1 if day["day"].get("totalsnow_cm", 0) > 0 else 0,
+                totalsnow_cm=day["day"].get("totalsnow_cm", 0.0),
+            )
             print(
-                f" {formatted_date:<5} | {temp:<8} | {pop:<11} | {maxuv:<12} | {gusts:<6}"
+                f" {formatted_date:<5} | {temp:<8} | {pop:<11} | {maxuv:<12} | {gusts:<8} | {day_snow['status']:<18}"
             )
         print("-" * self.line_len)
 
@@ -173,8 +218,6 @@ class Main:
             db_session.commit()
         finally:
             db_session.close()
-        if random.random() < 0.01:
-            clear(db_session)
         print_req = (
             input(" Need to print the forecast? (No; Yes): ").strip().lower() == "yes"
         )

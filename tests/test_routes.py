@@ -107,10 +107,12 @@ class TestRoutes:
         assert data["status"] == "error"
         assert response.status_code == 503
 
+    @patch("WEB.api_routes.SessionLocal")
     @patch("WEB.api_routes.WeatherService.get_weather")
     def test_index_get_success_return_weather(
-        self, mock_get_weather, client, fake_weather_response
+        self, mock_get_weather, mock_session_local, client, fake_weather_response
     ):
+        mock_session_local.return_value = MagicMock()
         mock_get_weather.return_value = fake_weather_response
         response = client.get("/api/weather?city=Berlin")
         data = response.get_json()
@@ -118,8 +120,10 @@ class TestRoutes:
         assert "error" not in data
         assert data["location"]["name"] == "Berlin"
 
+    @patch("WEB.api_routes.SessionLocal")
     @patch("WEB.api_routes.WeatherService.get_weather")
-    def test_index_city_not_found(self, mock_get_weather, client):
+    def test_index_city_not_found(self, mock_get_weather, mock_session_local, client):
+        mock_session_local.return_value = MagicMock()
         mock_get_weather.return_value = {
             "error": {"message": "City 'Invalid-city' not found."}
         }
@@ -129,13 +133,17 @@ class TestRoutes:
         assert "error" in data
         assert data["error"]["message"] == "City 'Invalid-city' not found."
 
-    def test_api_weather_missing_city_param(self, client):
+    @patch("WEB.api_routes.SessionLocal")
+    def test_api_weather_missing_city_param(self, mock_session_local, client):
+        mock_session_local.return_value = MagicMock()
         response = client.get("/api/weather")
         data = response.get_json()
         assert response.status_code == 400
         assert data["error"]["city"] == ["Missing data for required field."]
 
-    def test_weather_city_is_none(self, client):
+    @patch("WEB.api_routes.SessionLocal")
+    def test_weather_city_is_none(self, mock_session_local, client):
+        mock_session_local.return_value = MagicMock()
         response = client.get("/api/weather?city=")
         data = response.get_json()
         assert response.status_code == 400
@@ -151,3 +159,40 @@ class TestRoutes:
         for _ in range(100):
             response = client.get("/api/ping")
             assert response.status_code != 429
+
+    @patch("WEB.api_routes.SessionLocal")
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_api_weather_includes_snow_state(
+        self, mock_get_weather, mock_session_local, client, fake_weather_response
+    ):
+        mock_session_local.return_value = MagicMock()
+        mock_get_weather.return_value = fake_weather_response
+        response = client.get("/api/weather?city=London")
+        data = response.get_json()
+
+        assert response.status_code == 200
+        assert "snow_state" in data
+        assert "status" in data["snow_state"]
+        assert "snow_forecast" in data
+        assert isinstance(data["snow_forecast"], list)
+        assert len(data["snow_forecast"]) == 1
+        assert data["snow_forecast"][0]["date"] == "2026-07-16"
+        assert "status" in data["snow_forecast"][0]["snow_state"]
+
+    @patch("WEB.api_routes.SessionLocal")
+    @patch("WEB.api_routes.WeatherService.get_weather")
+    def test_api_weather_no_forecast_days(
+        self, mock_get_weather, mock_session_local, client
+    ):
+        empty_forecast_response = {
+            "current": {"temp_c": 20, "condition": {"text": "Sunny"}},
+            "forecast": {"forecastday": []},
+        }
+        mock_session_local.return_value = MagicMock()
+        mock_get_weather.return_value = empty_forecast_response
+        response = client.get("/api/weather?city=London")
+        data = response.get_json()
+
+        assert response.status_code == 200
+        assert data["snow_state"]["status"] == "No snow data"
+        assert data["snow_forecast"] == []

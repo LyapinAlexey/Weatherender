@@ -13,10 +13,13 @@ try:
     from .api_routes import api_bp, get_weather
     from .extensions import limiter
     from .scheduler import init_scheduler
+    from .swagger_config import spec
 except ImportError:
     from api_routes import api_bp, get_weather  # type: ignore[no-redef]
     from extensions import limiter  # type: ignore[no-redef]
     from scheduler import init_scheduler  # type: ignore[no-redef]
+    from swagger_config import spec  # type: ignore[no-redef]
+
 from flask import Flask, g, render_template, request, session
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_talisman import Talisman
@@ -30,11 +33,7 @@ from logging_config import setup_logging
 from models import SessionLocal, WeatherRequest
 from schemas import CityRequestSchema
 from services import WeatherService
-
-try:
-    from .swagger_config import spec
-except ImportError:
-    from swagger_config import spec  # type: ignore[no-redef]
+from snow import get_snow_state
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -237,7 +236,7 @@ def index() -> str:
         snow_info = {"status": "No snow data"}
         if forecast_days:
             today_day = forecast_days[0].get("day", {})
-            snow_info = WeatherService.get_snow_state(
+            snow_info = get_snow_state(
                 temp_c=current.get("temp_c", 0),
                 min_temp_c=today_day.get("mintemp_c", current.get("temp_c", 0)),
                 max_temp_c=today_day.get("maxtemp_c", current.get("temp_c", 0)),
@@ -309,7 +308,7 @@ def index() -> str:
             else:
                 prev_day_max_temp = day_info.get("maxtemp_c", 0)
 
-            day_snow_state = WeatherService.get_snow_state(
+            day_snow_state = get_snow_state(
                 temp_c=day_info.get("avgtemp_c", 0),
                 min_temp_c=day_info.get("mintemp_c", 0),
                 max_temp_c=day_info.get("maxtemp_c", 0),
@@ -363,6 +362,7 @@ def health_check() -> tuple[dict[str, str], int]:
     session = SessionLocal()
     try:
         session.execute(text("SELECT 1"))
+        logger.info("Health check passed")
         return {"status": "ok"}, 200
     except Exception:
         logger.exception("Health check error")

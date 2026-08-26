@@ -6,7 +6,7 @@ This document details the high-level architecture, design patterns, component in
 
 ## 1. High-Level Architecture Overview
 
-`Weatherender` is a production-grade, containerized application providing both a RESTful Web Interface (Flask) and a Command Line Interface (CLI). It features external API integrations, multi-level fallback strategies, asynchronous production worker configurations, and real-time observability.
+`Weatherender` is a production-grade, containerized application providing a RESTful Web Interface (Flask), a Command Line Interface (CLI), and an asynchronous JSON API v2 (FastAPI). It features external API integrations, multi-level fallback strategies, asynchronous production worker configurations, and real-time observability. In production, the Flask and FastAPI stacks are merged into a single deployed image — see [Component 6.5](#6-infrastructure-observability--cloud-deployment) below.
 
 ![Project Architecture](docs/architecture.svg)
 
@@ -15,6 +15,7 @@ This document details the high-level architecture, design patterns, component in
 - **Resilience & Fallback**: Automatic IP geolocation failover chain and graceful degradation when Redis caching is offline.
 - **Production Performance**: Flask served via Gunicorn utilizing `gevent` workers, with `psycogreen` patching `psycopg2` for non-blocking PostgreSQL network I/O.
 - **Data Maintenance**: Deterministic periodic DB cleanup via APScheduler, guarded by a lock-file leader-election pattern to avoid duplicate execution across Gunicorn workers.
+- **Single-Image Deployment**: Render deploys a single `uvicorn` process (`API/Dockerfile`) that mounts the synchronous Flask app inside the async FastAPI app via `WSGIMiddleware`, while local development keeps both stacks as independent Docker Compose containers.
 
 ---
 
@@ -30,6 +31,7 @@ This document details the high-level architecture, design patterns, component in
 | **Observability** | `prometheus-flask-exporter`, Structured JSON Logging |
 | **DevOps & Hosting** | Docker, Docker Compose, GitHub Actions, Render (Web Host), UptimeRobot (Heartbeat) |
 | **Testing & Performance**| Pytest, `unittest.mock`, Codecov, k6 (Load Testing) |
+| **Async Stack** | FastAPI, Uvicorn, httpx (async), Pydantic v2, `redis.asyncio`, `asyncpg` |
 
 ---
 
@@ -52,6 +54,12 @@ Weatherender/
 │   ├── DEPLOYMENT.md        # Production deployment guide (Render + Supabase + Upstash)
 │   ├── API.md                # API reference
 │   └── architecture.svg     # High-level architecture diagram
+├── API/                   # Async FastAPI service (v2) — also the sole Render deployment image
+│   ├── main.py              # ASGI entry point (/api/v2/weather, /api/v2/health); mounts WEB/app.py via WSGIMiddleware
+│   ├── async_services.py    # httpx.AsyncClient mirror of services.py's WeatherService
+│   ├── async_cache.py       # redis.asyncio module-level singleton cache
+│   ├── async_db.py          # create_async_engine / AsyncSessionLocal (asyncpg)
+│   └── pydantic_schemas.py  # Pydantic v2 query validation (renamed from schemas.py — see DEPLOYMENT.md)
 ├── alembic/                # Database migration scripts and environment config
 ├── schemas.py              # Marshmallow input validation and output serialization schemas
 ├── services.py              # Shared business logic, external API integration & IP fallback chain
@@ -59,7 +67,7 @@ Weatherender/
 ├── dbclear.py               # Deletes WeatherRequest rows older than 30 days; invoked by scheduler.py
 ├── models.py                # SQLAlchemy ORM models
 ├── config.py                # Centralized environment-based settings (`.env`)
-└── docker-compose.yml       # Orchestration for App, CLI, PostgreSQL, and Redis containers
+└── docker-compose.yml       # Orchestration for web, api, cli, migration, PostgreSQL (prod + test), and Redis containers
 ```
 
 ---
@@ -78,6 +86,11 @@ Weatherender/
   - Encapsulates weather requests via [WeatherAPI](https://www.weatherapi.com/).
   - Executes **IP Geolocation Fallback Chain**: Attempts detection via `ip-api.com` first; if unavailable, falls back to `ipinfo.io`.
 - **`schemas.py`**: Strictly validates incoming query parameters (e.g., city names) and standardizes API output formats using Marshmallow.
+
+### 🔹 Async API Layer (`API/`)
+- **`main.py`**: FastAPI ASGI app exposing `/api/v2/weather` and `/api/v2/health`. `city` is validated via `Annotated[WeatherQueryParams, Query()]` (`pydantic_schemas.py`) rather than a bare `Query(...)` — 1–100 characters, blank/whitespace-only rejected. Mounts the entire synchronous `WEB/app.py` Flask app at `/` via `fastapi.middleware.wsgi.WSGIMiddleware`, making this the single process Render deploys.
+- **`async_services.py` / `async_cache.py` / `async_db.py`**: async counterparts to `services.py`, `cache.py`, and the sync engine in `models.py`, built on `httpx.AsyncClient`, `redis.asyncio`, and `create_async_engine` (asyncpg) respectively — intentionally separate from the sync stack rather than shared, per the project's async/sync isolation decision.
+- **`pydantic_schemas.py`**: Pydantic v2 equivalent of `schemas.py`'s Marshmallow validation, scoped to `API/` only.
 
 ### 🔹 Data & Caching Engine (`models.py`, `cache.py`, `alembic/`)
 - **`models.py`**: Defines database tables (request history records) managed via SQLAlchemy, with `pool_size=10, max_overflow=20` configured on the engine (raised from SQLAlchemy's defaults during load testing — see [`PERFORMANCE.md`](PERFORMANCE.md)).
@@ -125,23 +138,58 @@ There are two distinct request paths that write different amounts of data — th
                              [ Render HTML template ]
 ```
 
-### JSON API (`/api/weather`) — no database writes
+### JSON API (`/api/weather`) — writes a request record on every call (including validation failures)
 
-```text
  Client (API consumer)
         │
         ▼
- [ WEB Layer: api_routes.py ] ───(per-route rate limiter on /api/weather, no DB session opened)
+ [ WEB Layer: api_routes.py ] ───(per-route rate limiter on /api/weather)
         │
         ▼
  [ Validation Layer ] ───(Marshmallow Validation in schemas.py)
         │
-        ▼
+        ├─ (Invalid) ──► [ Write a WeatherRequest row (success=0) ] ──► [ Return 400 ]
+        │
+        ▼ (Valid)
   [ Service Layer ] (services.py → WeatherService.get_weather)
         │
         ├─ (Cache hit) ──────────► [ Return cached JSON ]
         │
-        └─ (Cache miss) ─► [ Fetch External API Data ] ─► [ Cache in Redis ] ─► [ Return JSON ]
+        └─ (Cache miss) ─► [ Fetch External API Data ] ─► [ Cache in Redis ]
+                                                                  │
+                                                                  ▼
+                                              [ Write a WeatherRequest row to PostgreSQL ]
+                                              (success=1 or success=0 depending on upstream result)
+                                                                  │
+                                                                  ▼
+                                                            [ Return JSON ]
+```
+
+### Async JSON API (`/api/v2/weather`) — writes a request record on every call, fully async
+
+```text
+ Client (async API consumer)
+        │
+        ▼
+ [ API Layer: main.py ] ───(no rate limiter — bypasses flask-limiter entirely)
+        │
+        ▼
+ [ Validation Layer ] ───(Pydantic v2 validation in pydantic_schemas.py)
+        │
+        ▼
+  [ Async Service Layer ] (async_services.py → AsyncWeatherService.get_weather_async, httpx.AsyncClient)
+        │
+        ├─ (Cache hit) ──────────► [ Return cached JSON ]
+        │                          (async_cache.py, redis.asyncio)
+        │
+        └─ (Cache miss) ─► [ Fetch External API Data ] ─► [ Cache in Redis ] ─┐
+                                                                                 │
+                                                                                 ▼
+                                                         [ Write a WeatherRequest row to PostgreSQL ]
+                                                              (async_db.py, AsyncSessionLocal)
+                                                                                 │
+                                                                                 ▼
+                                                                       [ Return JSON ]
 ```
 
 ---
@@ -160,3 +208,5 @@ There are two distinct request paths that write different amounts of data — th
    - Structured JSON logging facilitates monitoring and diagnostic ingestion.
 4. **Automated CI/CD Pipeline**:
    - **GitHub Actions** enforces code quality checks (Ruff, Mypy) and executes the full `pytest` suite before triggering deploy webhooks to production.
+5. **Single-Image Production Deployment**:
+   Render deploys only `API/Dockerfile`'s image — it mounts `WEB/app.py` internally via `WSGIMiddleware`, so one `uvicorn` process serves both the async v2 API and the full legacy Flask stack (UI, v1 API, `/health`, `/metrics`, `/apidocs`). Locally, `docker-compose` still runs `WEB/` and `API/` as two independent containers for development and testing symmetry with the async work.

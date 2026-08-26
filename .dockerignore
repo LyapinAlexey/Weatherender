@@ -1,0 +1,35 @@
+# Secrets and environment variables
+.env
+.env.*
+!.env.example
+
+# Cache and trash
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# IDE Configs
+.vscode/
+.idea/
+
+# Git and CI/CD
+.git/
+.gitignore
+.github/
+.pre-commit-config.yaml
+
+# docs
+docs/
+load_tests/
+tests/
+*.md
+
+# Logs and local bases
+*.log
+*.sqlite3

@@ -5,9 +5,11 @@ const cities = ["London", "Miami", "New York", "Tokio", "Berlin", "Zurich"];
 
 export const options = {
     stages: [
-        { duration: "20s", target: 10 },
-        { duration: "1m", target: 10 },
-        { duration: "20s", target: 0 },
+        { duration: "10s", target: 5 },
+        { duration: "5s", target: 50 },
+        { duration: "20s", target: 50 },
+        { duration: "5s", target: 5 },
+        { duration: "10s", target: 5 },
     ],
 };
 
@@ -15,7 +17,7 @@ export default function () {
     const city = cities[Math.floor(Math.random() * cities.length)];
 
     group('health', () => {
-        const res_health = http.get("https://weather-7icc.onrender.com/health", {
+        const res_health = http.get("http://localhost:8001/api/v2/health", {
             tags: { name: "health" },
         });
         check(res_health, {
@@ -25,19 +27,8 @@ export default function () {
         sleep(1);
     });
 
-    group('ping', () => {
-        const res_ping = http.get("https://weather-7icc.onrender.com/api/ping", {
-            tags: { name: "ping" },
-        });
-        check(res_ping, {
-            "status is 200": (r) => r.status === 200,
-            "response time <3000ms": (r) => r.timings.duration < 3000,
-        });
-        sleep(1);
-    });
-
     group('weather', () => {
-        const res_weather = http.get(`https://weather-7icc.onrender.com/api/weather?city=${city}`, {
+        const res_weather = http.get(`http://localhost:8001/api/v2/weather?city=${city}`, {
             tags: { name: "weather" },
         });
         check(res_weather, {
@@ -46,6 +37,5 @@ export default function () {
         });
         sleep(1);
     });
-
 
 }

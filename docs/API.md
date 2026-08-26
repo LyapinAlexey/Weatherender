@@ -1,6 +1,8 @@
 # API Reference
 
-Weatherender exposes a JSON REST API alongside its server-rendered web UI. Full interactive documentation (OpenAPI 3.0 / Swagger) is available at `/apidocs` on any running instance, including the [live demo](https://weather-7icc.onrender.com/apidocs).
+Weatherender exposes a dual-stack JSON REST API alongside its server-rendered web UI:
+- **FastAPI (v2 Async API):** Interactive Swagger UI is available at `/docs` (or ReDoc at `/redoc`).
+- **Flask (v1 Sync API):** Interactive Swagger UI (OpenAPI 3.0) is available at `/apidocs`.
 
 Base URL (production): `https://weather-7icc.onrender.com`
 
@@ -8,20 +10,63 @@ Base URL (production): `https://weather-7icc.onrender.com`
 
 ## Endpoints
 
-| Endpoint | Method | Auth | Description |
+| Endpoint | Method | Engine | Auth | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `/api/v2/weather` | `GET` | FastAPI | None | High-performance Async API v2 with Pydantic v2 validation |
+| `/api/v2/health` | `GET` | FastAPI | None | Async DB health check (`AsyncSessionLocal`) |
+| `/docs` | `GET` | FastAPI | None | Interactive FastAPI OpenAPI/Swagger documentation |
+| `/redoc` | `GET` | FastAPI | None | Alternative FastAPI ReDoc documentation |
+| `/api/weather` | `GET` | Flask | None | Legacy sync API v1 (`?city=Berlin`) with Marshmallow validation |
+| `/api/apispec.json` | `GET` | Flask | None | Raw OpenAPI 3.0 specification for v1 |
+| `/health` | `GET` | Flask | None | Sync readiness check (verifies DB connectivity) |
+| `/metrics` | `GET` | Flask | None | Prometheus metrics |
+| `/api/ping` | `GET\|HEAD` | Flask | None | Lightweight liveness check (no DB connection) |
+| `/apidocs` | `GET` | Flask | None | Interactive Swagger UI for v1 |
+
+---
+
+### `GET /api/v2/weather`
+
+High-performance asynchronous endpoint powered by **FastAPI**, **Pydantic v2**, and `httpx`.
+
+**Query parameters**
+
+| Param | Type | Required | Notes |
 | :--- | :--- | :--- | :--- |
-| `/api/weather` | `GET` | None | Current weather + 3-day forecast for a city |
-| `/api/apispec.json` | `GET` | None | Raw OpenAPI 3.0 specification |
-| `/health` | `GET` | None | Readiness check (verifies DB connectivity) |
-| `/metrics` | `GET` | None | Prometheus metrics |
-| `/api/ping` | `GET` | None | Lightweight liveness check (no DB) |
-| `/apidocs` | `GET` | None | Interactive Swagger UI |
+| `city` | string | yes | 1–100 characters, validated via Pydantic v2 (`Annotated[WeatherQueryParams, Query()]`). Strips whitespace and rejects blank/whitespace-only input. |
+
+**Example**
+```bash
+curl "https://weather-7icc.onrender.com/api/v2/weather?city=Berlin"
+```
+
+**Responses**
+
+| Status | Meaning |
+| :--- | :--- |
+| `200` | Success — weather payload returned asynchronously |
+| `422` | Unprocessable Entity — missing, empty, or invalid `city` parameter |
+| `404` | City not found by the upstream weather provider |
+| `500` | Internal server error during upstream API processing |
+
+**Caching:** Responses are cached in Redis for `REDIS_TTL` seconds (default 300) via `AsyncRedisCache`. If Redis is unavailable, the endpoint transparently falls back to a live async fetch via `httpx.AsyncClient`.
+
+---
+
+### `GET /api/v2/health`
+
+Async readiness probe used to verify database connectivity for FastAPI routes via `AsyncSessionLocal` (`SELECT 1`).
+
+| Status | Body |
+| :--- | :--- |
+| `200` | `{"status": "ok"}` |
+| `503` | `{"status": "error", "detail": "503 Service Unavailable"}` |
 
 ---
 
 ### `GET /api/weather`
 
-Returns current conditions and a 3-day forecast for a given city.
+Returns current conditions and a 3-day forecast for a given city via the legacy synchronous **Flask** pipeline.
 
 **Query parameters**
 
@@ -43,17 +88,14 @@ curl "https://weather-7icc.onrender.com/api/weather?city=Berlin"
 | `404` | City not found by the upstream weather provider, or an upstream error occurred |
 
 Rate limited to 25 requests/minute per IP per worker via `flask-limiter`. See [Rate Limiting](#rate-limiting) below.
-**Caching:** responses are cached in Redis for `REDIS_TTL` seconds (default 300). Repeated requests for the same city within that window are served from cache without calling the upstream API. If Redis is unavailable, the app transparently falls back to a live fetch — cache failures never surface as errors to the client.
 
-**Note:** this endpoint does not write to the database. Request history is only persisted through the web UI (`/`), not through this API route — see [`PERFORMANCE.md`](PERFORMANCE.md) for why this distinction matters when interpreting load-test results.
+**Caching:** Responses are cached in Redis for `REDIS_TTL` seconds (default 300). If Redis is unavailable, it gracefully falls back to a live fetch.
 
 ---
 
 ### `GET /health`
 
-Readiness probe used by Docker Compose (`depends_on: condition: service_healthy`) and suitable for any external uptime check that should reflect real application health, not just process liveness.
-
-Executes `SELECT 1` against the database on every call.
+Synchronous readiness probe used by Docker Compose (`depends_on: condition: service_healthy`) and external monitors. Executes `SELECT 1` against the database via SQLAlchemy sync session.
 
 | Status | Body |
 | :--- | :--- |
@@ -64,7 +106,7 @@ Executes `SELECT 1` against the database on every call.
 
 ### `GET|HEAD /api/ping`
 
-A minimal liveness endpoint (defined in `api_routes.py` under the `api_bp` blueprint) that does **not** open a database session. Exists specifically so external monitors (UptimeRobot) can keep the Render instance warm without consuming Supabase's limited free-tier connection pool. Also accepts `HEAD` for monitors that use that method. It is explicitly exempted from the app-wide `User-Agent` requirement (`app.py`'s `check_user_agent` hook bypasses both `/ping` and `/api/ping`), since some uptime monitors don't send one. Prefer `/health` over `/api/ping` for anything that needs to confirm the database is actually reachable.
+A minimal liveness endpoint (defined in `api_routes.py` under the `api_bp` blueprint) that does **not** open a database session. Exists specifically so external monitors (UptimeRobot) can keep the Render instance warm without consuming Supabase's limited free-tier connection pool. Accepts `HEAD` requests and bypasses `User-Agent` verification checks.
 
 | Status | Body |
 | :--- | :--- |
@@ -80,17 +122,15 @@ Exposes application metrics in Prometheus text-exposition format via `prometheus
 
 ### `GET /api/apispec.json`
 
-Returns the raw OpenAPI 3.0 spec generated by `apispec`, the same one that powers the Swagger UI at `/apidocs`. Useful for generating client SDKs or importing into API tooling (Postman, Insomnia, etc.).
+Returns the raw OpenAPI 3.0 spec generated by `apispec` for Flask v1 routes, which powers `/apidocs`.
 
 ---
 
 ## Rate Limiting
 
-Enforced via `flask-limiter`, configured per-worker with in-memory storage (not Redis-backed — this is a deliberate design choice, not a bug; see the note in the README/config comments). The limiter is created in `WEB/extensions.py` and bound to the app via `limiter.init_app(app)` in `app.py`, which lets `api_routes.py` import it directly for per-route decorators without a circular import.
+Rate limiting on legacy Flask routes is enforced via `flask-limiter`, configured per-worker with in-memory storage. The limiter is initialized in `WEB/extensions.py` and bound in `app.py`.
 
-Applied at `25 per minute` per IP to `/` (`app.py`) and, individually, to `/api/weather` and `/api/apispec.json` (`api_routes.py`). At `-w 8` Gunicorn workers, the effective ceiling is roughly 8x that, since each worker tracks its own counter independently. `/api/ping` and `/health` are intentionally excluded — they're liveness/readiness endpoints used by uptime monitors and Docker's healthcheck.
-
->Note: an earlier attempt applied a single limit to the whole `api_bp` blueprint plus `limiter.exempt(ping)` to carve out `/api/ping` — in practice `exempt()` didn't take effect on a blueprint-registered view in this `flask-limiter` version (4.1.1). Per-route decorators (with `ping` left undecorated) were used instead.
+Applied at `25 per minute` per IP to `/` (`app.py`), `/api/weather`, and `/api/apispec.json` (`api_routes.py`). `/api/ping`, `/health`, and FastAPI `/api/v2/*` routes bypass `flask-limiter`.
 
 Where a limit applies, exceeding it returns `429 Too Many Requests`.
 
@@ -98,9 +138,25 @@ Where a limit applies, exceeding it returns `429 Too Many Requests`.
 
 ## Error Format
 
-Error response shape differs slightly by source:
+Error response formats depend on the endpoint engine:
 
-**Validation errors** (missing/invalid `city`, `400`) come straight from Marshmallow and use its native `field: [messages]` structure:
+### 1. FastAPI v2 Validation Errors (`422 Unprocessable Entity`)
+Follows standard FastAPI/Pydantic v2 JSON structure:
+```json
+{
+  "detail": [
+    {
+      "type": "value_error",
+      "loc": ["query", "city"],
+      "msg": "Value error, city must not be blank or whitespace-only",
+      "input": "   "
+    }
+  ]
+}
+```
+
+### 2. Flask v1 Validation Errors (`400 Bad Request`)
+Marshmallow validation returns a field-keyed structure:
 ```json
 {
   "error": {
@@ -109,7 +165,8 @@ Error response shape differs slightly by source:
 }
 ```
 
-**Upstream/business errors** (city not found, WeatherAPI failure, `404`) come from `WeatherService` and use a `message` string instead:
+### 3. Upstream / Business Errors (`404 Not Found`)
+Returned when a city is not found by WeatherAPI:
 ```json
 {
   "error": {
@@ -117,12 +174,11 @@ Error response shape differs slightly by source:
   }
 }
 ```
-Either way, the top-level key is always `error` — but check whether its value is a field-keyed object (validation) or a `message` string (everything else) before parsing.
 
 ---
 
 ## Interactive Docs
 
-For the full request/response schema, try requests live, and see all parameters — use the Swagger UI:
-
-**[weather-7icc.onrender.com/apidocs](https://weather-7icc.onrender.com/apidocs)**
+Try live API calls and inspect schemas via:
+* **FastAPI v2 Swagger UI:** [weather-7icc.onrender.com/docs](https://weather-7icc.onrender.com/docs)
+* **Flask v1 Swagger UI:** [weather-7icc.onrender.com/apidocs](https://weather-7icc.onrender.com/apidocs)

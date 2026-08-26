@@ -4,6 +4,52 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-25 — Single-image Render deployment via WSGIMiddleware
+- Merged production deployment into a single image: `API/main.py` now imports `WEB/app.py`'s Flask app directly and mounts it via `fastapi.middleware.wsgi.WSGIMiddleware` at `/`, so one `uvicorn` process serves both the async v2 API and the entire legacy Flask stack (UI, v1 API, `/health`, `/metrics`, `/apidocs`). Render now deploys `API/Dockerfile` exclusively; `WEB/Dockerfile` remains local-development-only via `docker-compose`.
+- Renamed `API/schemas.py` to `API/pydantic_schemas.py` after discovering a real import collision: once `WEB_DIR` was added to `sys.path` for the Flask import above, a bare `import schemas` elsewhere in the dependency chain resolved to `WEB/schemas.py`'s Marshmallow schema instead of the intended Pydantic model.
+- Both `WEB/Dockerfile` and `API/Dockerfile` switched from per-file `COPY` to `COPY . /app/` against a shared root `.dockerignore` — required because `API/Dockerfile`'s image now needs the full `WEB/` package tree, not just its own flat file list. This supersedes the earlier flat-copy/per-file-COPY convention for `API/`.
+- Updated `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, and `docs/architecture.svg` to reflect the new single-image deployment topology and the `API/` service's async module layout.
+
+## 2026-08-25 — Pydantic v2 validation for `/api/v2/weather` & Docker fix
+- Added: `API/schemas.py` with a `WeatherQueryParams` Pydantic v2 model, replacing the bare `city: str = Query(...)` parameter with `Annotated[WeatherQueryParams, Query()]` — enforces `city` length (1–100 chars) via `Field(...)` plus a `field_validator` rejecting blank/whitespace-only input (stripped and re-validated).
+- Added: test coverage in `tests/test_api_routes.py` for the new validation branches — blank city, whitespace-only city, and city over 100 characters (all `422`), alongside the pre-existing missing-city case.
+- Fixed: `WEB/Dockerfile` was missing `COPY snow.py /app` after the earlier `get_snow_state` extraction refactor — caused gunicorn workers in the `web` container to crash with `ModuleNotFoundError` on `from snow import get_snow_state`. Verified both `web` and `api` containers start clean after the fix.
+- Fixed: `API/main.py`'s `/favicon.ico` route referenced `WEB/static/images/favicon.ico` despite `API/Dockerfile` copying files flat — adjusted the `COPY` to bring the favicon into the flat `API/` image layout (also fixed a `.png`/`.ico` extension mismatch along the way).
+
+## 2026-08-24 — `API/` test suite
+- Added `tests/test_api_routes.py`: async test suite for `API/` using `httpx.AsyncClient` + `ASGITransport` + `pytest-asyncio` (explicit `@pytest.mark.asyncio`, STRICT mode).
+- Added `api_client` fixture in `conftest.py`, wrapping app startup/shutdown via `app.router.lifespan_context(app)` so `lifespan`-managed state (`app.state.http_client`) is available in tests.
+- Covered: `/api/v2/health` (DB ok / DB error → 503), `/api/v2/weather` (success with snow_state/snow_forecast, city-not-found → 404, missing city → 422, empty-forecast edge case).
+- Mocking pattern for async SQLAlchemy sessions: `AsyncSessionLocal` patched as a plain `MagicMock` with `__aenter__`/`__aexit__` manually wired to an `AsyncMock` session (since `AsyncSessionLocal()` itself isn't awaited — only entering the `async with` block is).
+- Fixed: Resolved `AttributeError` caused by cross-module import singleton conflicts in `AsyncCacheService`. Swapped explicit event-loop initialization in `lifespan` for a thread-safe, lazy-loaded initialization pattern (`_get_client`).
+- Improved: Hardened cache data pipeline serialization safety by adding `default=str` helper within `json.dumps()` execution, safely coercing Pydantic dynamic objects and datetimes.
+- Added: Mounted explicit `/favicon.ico` endpoint utilizing `FileResponse` to handle automatic browser icon lookups natively.
+- Fixed: Corrected Docker image context build path for `favicon.png` targeting the web source asset directory (`WEB/static/images/favicon.png`) within `Dockerfile`.
+
+## 2026-08-23 — DB writes, health check, Dockerization for `API/`
+- Added DB write-on-request logging to `GET /api/weather` (sync) and `GET /api/v2/weather` (async), mirroring the existing pattern used by `/`. Both log `WeatherRequest` rows (success/error, `temp_c`/`condition` or `error_message`) with distinct `source` values (`"api"`, `"api-v2"`).
+- Added `API/async_db.py`: a new async SQLAlchemy engine (`create_async_engine` + `async_sessionmaker`, `asyncpg` driver) local to `API/` only — derives `ASYNC_DATABASE_URL` from the existing `Config.DATABASE_URL` by swapping the driver scheme to `postgresql+asyncpg://`.
+- Added `GET /api/v2/health`: async mirror of the sync `/health` endpoint, running a real `SELECT 1` through the new async engine.
+- **Refactor**: extracted `get_snow_state` out of `WeatherService` into a new standalone module `snow.py` at the repo root — it's a pure function with no I/O, so it never needed to be a class method. This decouples snow calculations from `services.py`'s module-level `cache_service = CacheService()` singleton, letting `API/` use `get_snow_state` without pulling in the sync Redis client it doesn't need. All call sites (`WEB/app.py`, `WEB/api_routes.py`, `API/main.py`) and tests updated accordingly.
+- Added `API/Dockerfile` (flat-copy style, matching `WEB/Dockerfile`) and a new `api` service in `docker-compose.yml`, mirroring `web`'s dependency structure (`weather_db`, `cache`, `migration`). Verified end-to-end via `docker-compose up --build`: `/api/v2/health` and `/api/v2/weather` both respond correctly through the Docker network.
+- Added `asyncpg` to `requirements.txt`.
+
+## 2026-08-22 — New async FastAPI service (`API/`)
+- Added a new, fully separate third service (`API/`) alongside `WEB/` and `CLI/`, built on FastAPI + Uvicorn, sharing root-level `models.py`/`config.py`. `WEB/services.py` (sync, `requests`) stays completely untouched; `API/async_services.py` is a new, independent async mirror using `httpx.AsyncClient`.
+- Implemented `GET /api/v2/weather`: mirrors the existing sync `/api/weather` contract exactly — `city` is a required query parameter, no IP auto-detection, no elevation lookup (deferred; not in scope for v1). Also returns `snow_state`/`snow_forecast` (added to `/api/weather` on 2026-08-21), reusing `WeatherService.get_snow_state` directly — pure function, no I/O, safe to call from async code as-is.
+- `API/main.py`: FastAPI `lifespan` context manager creates a single `httpx.AsyncClient` at startup (stored in `app.state.http_client`) and closes it on shutdown, avoiding per-request client creation/TCP handshake overhead.
+- `API/async_services.py`: `AsyncWeatherService.get_weather_async` — async mirror of `WeatherService.get_weather` (same cache-aside logic, same error handling for 401/403/400/non-JSON/network errors), using the shared `httpx.AsyncClient` passed in as a parameter.
+- `API/async_cache.py`: `AsyncCacheService` — async mirror of `WEB/cache.py`'s `CacheService`, using `redis.asyncio` instead of sync `redis-py`.
+- Added `API/__init__.py` and `CLI/__init__.py` (re-export pattern, matching `WEB/__init__.py`) to fix a `mypy` "Duplicate module named 'main'" conflict between `API/main.py` and `CLI/main.py`.
+- Added `fastapi`, `uvicorn`, `httpx` to `requirements.txt`, reorganized the file into commented sections (WEB/Flask, API/FastAPI, shared HTTP/DB/caching/validation, scheduling, dev tooling).
+- Verified end-to-end locally via `uvicorn API.main:app --reload` against the real WeatherAPI.
+- **Not yet done** (tracked as follow-ups): `API/` test suite, `API/Dockerfile` + docker-compose integration, Pydantic v2 request/response schemas, DB write-on-request logging (planned for both `/api/weather` and `/api/v2/weather`, the latter requiring a new async SQLAlchemy engine).
+
+## 2026-08-21 — Snow forecast in JSON API
+- Extended `/api/weather` response with two derived fields built from `WeatherService.get_snow_state`: `snow_state` (today's snow conditions) and `snow_forecast` (per-day snow conditions across the returned forecast window), mirroring logic already used by the web UI (`/`).
+- Added `tests/test_routes.py` coverage for both the populated-forecast case and the empty-forecast edge case (falls back to `{"status": "No snow data"}` and an empty `snow_forecast` list).
+- Updated the `/api/weather` Swagger/OpenAPI description (`docs`/`/apidocs`) to document the new fields.
+
 ## 2026-08-18 — Periodic DB cleanup via APScheduler
 - Replaced the probabilistic (0.01% per-request) call to `dbclear.clear()` in `app.py` with a deterministic scheduled job: new `WEB/scheduler.py` uses APScheduler's `BackgroundScheduler` to run cleanup every 7 days.
 - Solved the multi-worker duplication problem (4 Gunicorn workers would otherwise each start their own scheduler) with a leader-election-via-lock-file pattern: workers race to atomically create `/tmp/scheduler_leader.lock` via `os.open(..., O_CREAT | O_EXCL | O_WRONLY)`; only the worker that wins runs the scheduler. Documented as a known limitation: a restarted leader worker won't reclaim leadership until the next container redeploy.
