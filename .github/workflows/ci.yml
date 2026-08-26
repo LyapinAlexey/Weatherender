@@ -70,7 +70,7 @@ jobs:
           docker compose logs
           exit 1
       - name: Run pytest
-        run: docker compose run --rm -v ${{ github.workspace }}:/main cli pytest tests/ --cov=. --cov-report=xml
+        run: docker compose run --rm -v ${{ github.workspace }}:/main cli pytest tests/ --cov=. --cov-report=xml --asyncio-mode=auto
         env:
           WEATHER_API_KEY: ${{ secrets.API_KEY }}
           DATABASE_URL: postgresql://test_user:test_password@weather_test_db:5432/test_weather_db

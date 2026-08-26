@@ -98,14 +98,14 @@ async def reset_cache_client():
 
     if cache_service.client is not None:
         try:
-            await cache_service.close()
+            await cache_service.client.aclose()
         except Exception:
             pass
         cache_service.client = None
     yield
     if cache_service.client is not None:
         try:
-            await cache_service.close()
+            await cache_service.client.aclose()
         except Exception:
             pass
         cache_service.client = None
