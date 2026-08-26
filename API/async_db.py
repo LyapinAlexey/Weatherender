@@ -8,5 +8,9 @@ ASYNC_DATABASE_URL = Config.DATABASE_URL.replace(
     "postgresql://", "postgresql+asyncpg://", 1
 )
 
-engine = create_async_engine(ASYNC_DATABASE_URL)
+engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    pool_size=10,
+    max_overflow=20,
+)
 AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
