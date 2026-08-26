@@ -62,7 +62,7 @@ async def get_weather_v2(
     weather_data = await AsyncWeatherService.get_weather_async(client=client, city=city)
     if "error" in weather_data:
         info_err = WeatherRequest(
-            city=city,
+            city=str(city),
             source="api-v2",
             success=0,
             error_message=weather_data["error"].get("message"),

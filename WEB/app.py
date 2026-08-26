@@ -209,7 +209,7 @@ def index() -> str:
             )
         else:
             info_suc = WeatherRequest(
-                city=str(query_param),
+                city=city,
                 source="web",
                 temp_c=round(data["current"]["temp_c"], 2),
                 condition=data["current"]["condition"]["text"],
