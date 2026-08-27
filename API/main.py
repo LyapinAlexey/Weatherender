@@ -28,12 +28,12 @@ try:
     from .async_cache import cache_service
     from .async_db import AsyncSessionLocal
     from .async_services import AsyncWeatherService
-    from .pydantic_schemas import WeatherQueryParams
+    from .pydantic_schemas import WeatherQueryParams, WeatherResponseV2
 except ImportError:
     from async_services import AsyncWeatherService  # type: ignore[no-redef]
     from async_db import AsyncSessionLocal  # type: ignore[no-redef]
     from async_cache import cache_service  # type: ignore[no-redef]
-    from pydantic_schemas import WeatherQueryParams  # type: ignore[no-redef]
+    from pydantic_schemas import WeatherQueryParams, WeatherResponseV2  # type: ignore[no-redef]
 
 from logging_config import setup_logging
 from models import WeatherRequest
@@ -54,16 +54,21 @@ async def lifespan(app: FastAPI):
     await cache_service.close()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    docs_url="/v2/docs",
+    redoc_url="/v2/redoc",
+    openapi_url="/v2/openapi.json",
+)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
-@app.get("/api/v2/weather")
+@app.get("/api/v2/weather", response_model=WeatherResponseV2)
 @limiter.limit("25/minute")
 async def get_weather_v2(
     request: Request, params: Annotated[WeatherQueryParams, Query()]
-) -> dict:
+) -> WeatherResponseV2:
     city = params.city
     client = request.app.state.http_client
     weather_data = await AsyncWeatherService.get_weather_async(client=client, city=city)
@@ -147,7 +152,7 @@ async def get_weather_v2(
         )
 
     weather_data["snow_forecast"] = snow_forecast
-    return weather_data
+    return WeatherResponseV2.model_validate(weather_data)
 
 
 @app.get("/api/v2/health")

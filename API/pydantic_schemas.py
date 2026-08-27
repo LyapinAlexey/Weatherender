@@ -1,6 +1,23 @@
 from pydantic import BaseModel, Field, field_validator
 
 
+class SnowState(BaseModel):
+    status: str
+
+
+class SnowForecast(BaseModel):
+    date: str
+    snow_state: SnowState
+
+
+class WeatherResponseV2(BaseModel):
+    location: dict = Field(default_factory=dict)
+    current: dict = Field(default_factory=dict)
+    forecast: dict = Field(default_factory=dict)
+    snow_state: SnowState
+    snow_forecast: list[SnowForecast]
+
+
 class WeatherQueryParams(BaseModel):
     city: str = Field(..., min_length=1, max_length=100)
 
