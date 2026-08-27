@@ -168,17 +168,17 @@ engine = create_async_engine(
 
 ## Summary
 
-| Test                          | Environment | Stack    | checks_failed | http_req_failed | avg duration | max duration |
-|--------------------------------|-------------|----------|----------------|------------------|---------------|---------------|
-| Smoke                          | Render      | v1 sync  | 0%             | 0%               | 372ms         | —             |
-| Smoke v2                       | Render      | v2 async | 0.40%          | 0.81%            | 693ms         | 2.39s         |
-| Load (sync workers)            | Render      | v1 sync  | 7.35%          | 9.80%            | 993ms         | 21.96s        |
-| Load (gevent + psycogreen)     | Render      | v1 sync  | 2.85%          | 5.70%            | 196ms         | 1.13s         |
-| Load v2 (after pool fix)       | Render      | v2 async | 5.76%          | 11.52%           | 601.51ms      | 2.53s         |
-| Stress (gradual ramp)          | Local       | v1 sync  | 2.98%          | 5.97%            | 15ms          | 667ms         |
-| Stress v2 (after pool fix)     | Local       | v2 async | 4.10%          | 8.21%            | 9.18ms        | 1.01s         |
-| Spike (sudden burst)           | Local       | v1 sync  | 2.74%          | 5.49%            | 17ms          | 348ms         |
-| Spike v2 (after pool fix)      | Local       | v2 async | 3.78%          | 7.56%            | 7.33ms        | **56.89ms**   |
+
+| Test                          | Stack    | Expected Status | Avg Duration | p(95) Duration | Max Duration | Status Check Pass |
+|--------------------------------|----------|-----------------|--------------|----------------|--------------|-------------------|
+| Smoke                          | v1 sync  | 200             | 372ms        | 387ms          | —            | 100%              |
+| Smoke v2                       | v2 async | 200             | 693ms        | 623ms          | 2.39s        | 99.6%             |
+| Load (gevent + psycogreen)     | v1 sync  | 200             | 196ms        | 380ms          | 1.13s        | 97.15%            |
+| Load v2                        | v2 async | 200             | 601ms        | 803ms          | 2.53s        | 94.24%            |
+| Stress                         | v1 sync  | 200 / 429       | 6.53ms       | 13.22ms        | 801.79ms     | 97.36%            |
+| Stress v2                      | v2 async | 200 / 429       | 6.38ms       | 12.52ms        | 613.00ms     | 95.71%            |
+| Spike                          | v1 sync  | 200 / 429       | 5.49ms       | 12.18ms        | 27.09ms      | 97.20%            |
+| Spike v2                       | v2 async | 200 / 429       | 6.26ms       | 12.27ms        | 24.92ms      | 95.42%            |
 
 **Key takeaways:**
 - Switching Gunicorn from `sync` to `gevent` workers was the single highest-impact fix for v1, cutting worst-case latency by ~12x and error rate roughly in half on the Render deployment.

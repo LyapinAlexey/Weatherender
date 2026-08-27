@@ -128,7 +128,7 @@ Synchronous readiness probe used by Docker Compose (`depends_on: condition: serv
 
 ---
 
-### `GET|HEAD /api/ping`
+### `GET / HEAD /api/ping`
 
 A minimal liveness endpoint (defined in `api_routes.py` under the `api_bp` blueprint) that does **not** open a database session. Exists specifically so external monitors (UptimeRobot) can keep the Render instance warm without consuming Supabase's limited free-tier connection pool. Accepts `HEAD` requests and bypasses `User-Agent` verification checks.
 
@@ -209,6 +209,15 @@ Returned by `slowapi` on `/api/v2/weather` when a client exceeds the per-minute 
 {
   "error": "Rate limit exceeded: 25 per 1 minute"
 }
+```
+
+---
+
+## Resilience & Retries (Tenacity)
+
+Both engines incorporate automatic exponential backoff retries via `tenacity` for resilience against upstream WeatherAPI network timeouts and transient errors:
+- **v1 Flask (Sync):** Uses synchronous `@retry` logic wrapping upstream `requests` calls with exponential backoff.
+- **v2 FastAPI (Async):** Uses asynchronous `@retry` logic wrapping `httpx.AsyncClient` calls without blocking the async event loop.
 
 ---
 

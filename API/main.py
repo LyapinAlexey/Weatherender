@@ -20,6 +20,12 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from sqlalchemy import text
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from snow import get_snow_state
 from WEB.app import app as flask_app
@@ -55,15 +61,25 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    title="Weatherender API",
+    description="High-performance async weather and Snow Surface Condition Index (SSCI) API.",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/v2/docs",
     redoc_url="/v2/redoc",
     openapi_url="/v2/openapi.json",
 )
+
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=0.2, max=2.0),
+    retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
+    reraise=True,
+)
 @app.get("/api/v2/weather", response_model=WeatherResponseV2)
 @limiter.limit("25/minute")
 async def get_weather_v2(
