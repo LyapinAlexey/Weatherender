@@ -34,7 +34,8 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 🗄 PostgreSQL persistence via SQLAlchemy + Alembic migrations
 - 🧹 Automated DB cleanup: Background storage rotation powered by `APScheduler` (running weekly with a file-lock mechanism to prevent duplicate worker triggers) to safely stay within DB limits.
 - ✅ Input validation with Marshmallow (sync) and pydantic v2 (async)
-- 🚦 Rate limiting (flask-limiter for v1, slowapi for v2)
+- 🛡️ Resilience & Retries (`tenacity`): Exponential backoff wrapper for upstream WeatherAPI calls (synchronous for v1 Flask `requests`, asynchronous non-blocking for v2 FastAPI `httpx`).
+- 🚦 Rate Limiting & Protection: Granular per-worker rate limiting (`flask-limiter` for v1, `slowapi` for v2). System stress & spike tests validate smooth rate-limiting graceful degradation (`429 Too Many Requests`) under severe traffic spikes.
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
 - 🧪 118+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
@@ -91,7 +92,8 @@ The app exposes a JSON REST API alongside the web UI.
 |----------------------|--------|------------------------------------------------------------|
 | `/api/v2/weather`	   | GET	  | High-performance Async API v2 with Pydantic validation (Rate limited: 25 req/min)     |
 | `/api/v2/health`	   | GET	  | Async DB health check                                      |
-| `/docs`	             | GET	  | Interactive FastAPI OpenAPI/Swagger documentation          |
+| `/v2/redoc`          | GET	  | FastAPI	Alternative FastAPI ReDoc documentation            |
+| `/v2/docs`	         | GET	  | Interactive FastAPI OpenAPI/Swagger documentation          |
 | `/api/weather`       | GET    | Get current weather + forecast for a city (`?city=Berlin`) |
 | `/api/apispec.json`  | GET    | Raw OpenAPI 3.0 specification                              |
 | `/health`            | GET    | Readiness check (verifies DB connectivity)                 |
@@ -231,12 +233,9 @@ For commercial licensing inquiries, contact:
 
 <p align="center">
   <a href="mailto:lehacomp16@gmail.com">
-    <img src="https://shields.io" />
+    <img src="https://img.shields.io/badge/Email-lehacomp16%40gmail.com-blue?style=for-the-badge&logo=gmail" alt="Email" />
   </a>
-</p>
-
-<p align="center">
-  <a href="https://t.me">
-    <img src="https://shields.io" />
+  <a href="https://t.me/LyapinAlexey">
+    <img src="https://img.shields.io/badge/Telegram-Contact-2CA5E0?style=for-the-badge&logo=telegram" alt="Telegram" />
   </a>
 </p>

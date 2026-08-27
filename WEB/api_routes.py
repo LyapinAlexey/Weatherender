@@ -1,5 +1,12 @@
+import requests
 from flask import Blueprint, request
 from marshmallow import ValidationError
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from models import SessionLocal, WeatherRequest
 
@@ -19,6 +26,12 @@ from snow import get_snow_state
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=0.2, max=2.0),
+    retry=retry_if_exception_type((requests.RequestException, requests.HTTPError)),
+    reraise=True,
+)
 @api_bp.route("/weather")
 @limiter.limit("25 per minute")
 def get_weather():

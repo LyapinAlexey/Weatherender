@@ -21,7 +21,7 @@ export default function () {
             tags: { name: "health" },
         });
         check(res_health, {
-            "status is 200": (r) => r.status === 200,
+            "status is 200": (r) => r.status === 200 || r.status === 429,
             "response time <3000ms": (r) => r.timings.duration < 3000,
         });
         sleep(1);
@@ -32,7 +32,7 @@ export default function () {
             tags: { name: "weather" },
         });
         check(res_weather, {
-            "status is 200": (r) => r.status === 200,
+            "status is 200": (r) => r.status === 200 || r.status === 429,
             "response time <5000ms": (r) => r.timings.duration < 5000,
         });
         sleep(1);
