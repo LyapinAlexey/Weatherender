@@ -61,6 +61,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    title="Weatherender API",
+    description="High-performance async weather and Snow Surface Condition Index (SSCI) API.",
+    version="2.0.0",
     lifespan=lifespan,
     docs_url="/v2/docs",
     redoc_url="/v2/redoc",
