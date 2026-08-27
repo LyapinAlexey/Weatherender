@@ -233,9 +233,11 @@ For commercial licensing inquiries, contact:
 
 <p align="center">
   <a href="mailto:lehacomp16@gmail.com">
-    <img src="https://img.shields.io/badge/Email-lehacomp16%40gmail.com-blue?style=for-the-badge&logo=gmail" alt="Email" />
+    <img src="https://img.shields.io/badge/Email-lehacomp16%40gmail.com-blue?logo=gmail&logoColor=white" alt="Email" />
   </a>
+  <br>
+  <br>
   <a href="https://t.me/LyapinAlexey">
-    <img src="https://img.shields.io/badge/Telegram-Contact-2CA5E0?style=for-the-badge&logo=telegram" alt="Telegram" />
+    <img src="https://img.shields.io/badge/Telegram-%40LyapinAlexey-2CA5E0?logo=telegram&logoColor=white" alt="Telegram" />
   </a>
 </p>
