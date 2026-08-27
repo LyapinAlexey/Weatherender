@@ -75,6 +75,10 @@ jobs:
           WEATHER_API_KEY: ${{ secrets.API_KEY }}
           DATABASE_URL: postgresql://test_user:test_password@weather_test_db:5432/test_weather_db
           TEST_DATABASE_URL: postgresql://test_user:test_password@weather_test_db:5432/test_weather_db
+      - name: Run k6 smoke test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: load_tests/ci_smoke.js
       - name: Run mypy
         run: docker compose run --rm cli mypy .
       - name: Upload coverage reports to Codecov
