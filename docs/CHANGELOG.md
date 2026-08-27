@@ -4,6 +4,12 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-08-27 – Production Release v2.0.0 & FastAPI Migration
+- **Added**: Hybrid Pydantic v2 response schemas (`SnowState`, `SnowForecast`, `WeatherResponseV2`) and implemented the `get_snow_state` core algorithm for winter sports condition analysis.
+- **Added**: Full asynchronous API routing and integration with automated CI/CD deployment pipelines on Render.
+- **Refactored**: Cleaned up the codebase to ensure robust exception handling, strict payload validation, and passing test suites (`pytest`).
+- **Updated**: Added dynamic release badges and project documentation to match production standards.
+
 ### 2026-08-27 - Pydantic v2 Response Model for API v2
 - Added hybrid Pydantic v2 response schemas (`SnowState`, `SnowForecast`, `WeatherResponseV2`) in `API/pydantic_schemas.py`.
 - Applied `response_model=WeatherResponseV2` to `/api/v2/weather` route with safety defaults (`Field(default_factory=dict)`) for passthrough fields.
