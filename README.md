@@ -1,6 +1,6 @@
 # Weatherender
 
-Production-grade weather application with a Flask web interface and CLI tool, built as a portfolio project demonstrating real-world engineering practices, has been developed by Alex Lyapin. The application provides current weather information, a 3-day forecast, and a unique Snow Surface Condition Index (SSCI) for skiers and outdoor enthusiasts.
+Production-grade weather application with a Flask web interface, a CLI tool, and a high-performance async FastAPI v2 API, built as a portfolio project demonstrating real-world engineering practices, has been developed by Alexey Lyapin.
 
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 [![Release](https://img.shields.io/github/v/release/LyapinAlexey/Weatherender?logo=python&logoColor=306998&link=https%3A%2F%2Fgithub.com%2FLyapinAlexey%2FWeatherender%2Freleases%2Flatest)](https://github.com/LyapinAlexey/Weatherender/releases/latest)
@@ -36,10 +36,10 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 - 🧹 Automated DB cleanup: Background storage rotation powered by `APScheduler` (running weekly with a file-lock mechanism to prevent duplicate worker triggers) to safely stay within DB limits.
 - ✅ Input validation with Marshmallow (sync) and pydantic v2 (async)
 - 🛡️ Resilience & Retries (`tenacity`): Exponential backoff wrapper for upstream WeatherAPI calls (synchronous for v1 Flask `requests`, asynchronous non-blocking for v2 FastAPI `httpx`).
-- 🚦 Rate Limiting & Protection: Granular per-worker rate limiting (`flask-limiter` for v1, `slowapi` for v2). System stress & spike tests validate smooth rate-limiting graceful degradation (`429 Too Many Requests`) under severe traffic spikes.
+- 🚦 Rate Limiting & Protection: Granular per-worker rate limiting (`flask-limiter` for v1, `slowapi` for v2), confirmed experimentally via `scripts/check_limit.sh` (400 sequential requests, graceful `429 Too Many Requests` degradation beyond the quota).
 - 🐳 Fully containerized with Docker Compose
 - 🔄 CI pipeline via GitHub Actions (build, migrate, health check)
-- 🧪 118+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
+- 🧪 119+ automated tests (pytest): unit, mocked service, Flask route, and real PostgreSQL integration tests
 - 🔌 JSON REST API (`/api/weather`) with interactive Swagger/OpenAPI docs
 - ⚡ Redis caching for WeatherAPI responses (TTL-based, graceful fallback on Redis unavailability)
 - 📊 Prometheus metrics endpoint (`/metrics`) for observability
@@ -51,7 +51,7 @@ Stack in production: Render (app) + Supabase (PostgreSQL) + Upstash (Redis).
 
 ### Tech Stack
 
-- **Backend:** `Python 3.13`, `FastAPI (ASGI core)`, `Flask WSGI via WSGIMiddleware`, `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy (sync/async)`, `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`, `SlowAPI`
+- **Backend:** `Python 3.13`, `FastAPI (ASGI core)`, `Flask WSGI via WSGIMiddleware`, `Uvicorn`, `Gunicorn (gevent workers)`, `SQLAlchemy (sync/async)`, `Alembic`, `Marshmallow`, `Pydantic v2`, `Flask-Limiter`, `SlowAPI`, `Tenacity`
 - **Database:** `PostgreSQL`
 - **Infrastructure & DevOps:** `Docker`, `Docker Compose`, `GitHub Actions (CI/CD)`, `APScheduler (for db clear)`
 - **Testing & Quality:** `Pytest`, `unittest.mock`, `Codecov`, `k6 (smoke, load, stress, spike)`
@@ -93,7 +93,7 @@ The app exposes a JSON REST API alongside the web UI.
 |----------------------|--------|------------------------------------------------------------|
 | `/api/v2/weather`	   | GET	  | High-performance Async API v2 with Pydantic validation (Rate limited: 25 req/min)     |
 | `/api/v2/health`	   | GET	  | Async DB health check                                      |
-| `/v2/redoc`          | GET	  | FastAPI	Alternative FastAPI ReDoc documentation            |
+| `/v2/redoc`          | GET	  | Alternative FastAPI ReDoc documentation                    |
 | `/v2/docs`	         | GET	  | Interactive FastAPI OpenAPI/Swagger documentation          |
 | `/api/weather`       | GET    | Get current weather + forecast for a city (`?city=Berlin`) |
 | `/api/apispec.json`  | GET    | Raw OpenAPI 3.0 specification                              |
