@@ -92,7 +92,7 @@ async def api_client():
             yield client
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def reset_cache_client():
     from API.async_cache import cache_service
 
@@ -109,3 +109,12 @@ async def reset_cache_client():
         except Exception:
             pass
         cache_service.client = None
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def reset_limiter():
+    from API.main import limiter
+
+    limiter.reset()
+    yield
+    limiter.reset()
