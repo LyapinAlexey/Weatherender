@@ -224,5 +224,5 @@ Both engines incorporate automatic exponential backoff retries via `tenacity` fo
 ## Interactive Docs
 
 Try live API calls and inspect schemas via:
-* **FastAPI v2 Swagger UI:** [weather-7icc.onrender.com/docs](https://weather-7icc.onrender.com/docs)
+* **FastAPI v2 Swagger UI:** [weather-7icc.onrender.com/v2/docs](https://weather-7icc.onrender.com/v2/docs)
 * **Flask v1 Swagger UI:** [weather-7icc.onrender.com/apidocs](https://weather-7icc.onrender.com/apidocs)
