@@ -89,7 +89,7 @@ Weatherender/
 - **`schemas.py`**: Strictly validates incoming query parameters (e.g., city names) and standardizes API output formats using Marshmallow.
 
 ### 🔹 Async API Layer (`API/`)
-- **`main.py`**: FastAPI ASGI app exposing `/api/v2/weather` and `/api/v2/health`. `city` is validated via `Annotated[WeatherQueryParams, Query()]` (`pydantic_schemas.py`) rather than a bare `Query(...)` — 1–100 characters, blank/whitespace-only rejected. Rate limiting is enforced on `GET /api/v2/weather` via `slowapi` (25 req/min per IP). Mounts the entire synchronous `WEB/app.py` Flask app at `/` via `fastapi.middleware.wsgi.WSGIMiddleware`, making this the single process Render deploys.
+- **`main.py`**: FastAPI ASGI app exposing `/api/v2/weather` and `/api/v2/health`. `city` is validated via `Annotated[WeatherQueryParams, Query()]` (`pydantic_schemas.py`) rather than a bare `Query(...)` — 1–100 characters, blank/whitespace-only rejected. Rate limiting is enforced on `GET /api/v2/weather` via `slowapi` (25 req/min per IP). Mounts the entire synchronous `WEB/app.py` Flask app at `/` via `a2wsgi.WSGIMiddleware`, making this the single process Render deploys.
 - **`async_services.py` / `async_cache.py` / `async_db.py`**: async counterparts to `services.py`, `cache.py`, and the sync engine in `models.py`, built on `httpx.AsyncClient`, `redis.asyncio`, and `create_async_engine` (asyncpg) respectively — intentionally separate from the sync stack rather than shared, per the project's async/sync isolation decision.
 - **`pydantic_schemas.py`**: Pydantic v2 equivalent of `schemas.py`'s Marshmallow validation, scoped to `API/` only.
 
@@ -141,6 +141,7 @@ There are two distinct request paths that write different amounts of data — th
 
 ### JSON API (`/api/weather`) — writes a request record on every call (including validation failures)
 
+```text
  Client (API consumer)
         │
         ▼

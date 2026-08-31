@@ -1,5 +1,6 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import httpx
 import pytest
 
 from API.main import limiter
@@ -135,3 +136,20 @@ class TestApiRoutes:
         response = await api_client.get("/api/v2/weather?city=Berlin")
         assert response.status_code == 429
         assert "Rate limit exceeded" in response.text
+
+    @pytest.mark.asyncio
+    @patch("API.main.AsyncSessionLocal")
+    @patch("API.main.AsyncWeatherService.get_weather_async")
+    async def test_get_weather_v2_retries_on_transient_error(
+        self, mock_get_weather, mock_session_local, fake_weather_response, api_client
+    ):
+        mock_session = AsyncMock()
+        mock_session.add = MagicMock()
+        mock_session_local.return_value.__aenter__.return_value = mock_session
+        mock_session_local.return_value.__aexit__.return_value = None
+        mock_get_weather.side_effect = [
+            httpx.RequestError("boom", request=httpx.Request("GET", "http://test")),
+            fake_weather_response,
+        ]
+        response = await api_client.get("/api/v2/weather?city=Berlin")
+        assert response.status_code == 200
