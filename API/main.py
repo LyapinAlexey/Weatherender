@@ -74,14 +74,14 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
+@app.get("/api/v2/weather", response_model=WeatherResponseV2)
+@limiter.limit("25/minute")
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=0.2, max=2.0),
     retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
     reraise=True,
 )
-@app.get("/api/v2/weather", response_model=WeatherResponseV2)
-@limiter.limit("25/minute")
 async def get_weather_v2(
     request: Request, params: Annotated[WeatherQueryParams, Query()]
 ) -> WeatherResponseV2:
