@@ -1,0 +1,18 @@
+name: "❓ Q&A & Support"
+description: "Ask a question about the codebase, architecture, or Docker deployment"
+title: "[Question]: "
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: "Your question"
+      description: "What exactly is unclear in the project or where are you getting stuck?"
+      placeholder: "I'm trying to understand how the asynchronous caching works in async_cache.py..."
+    validations:
+      required: true
+  - type: textarea
+    id: code_snippet
+    attributes:
+      label: "Logs or Code Snippets (Optional)"
+      description: "Paste your Docker container logs, stack traces, or relevant code fragments here."
+      render: python

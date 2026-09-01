@@ -39,7 +39,7 @@ See the [Running Tests](README.md#running-tests) section in the README for setup
 
 This project follows [Conventional Commits](https://www.conventionalcommits.org/).
 
-- Permitted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `release`
+- Permitted types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `tests`, `chore`, `release`
 - Write messages in English, in the imperative mood (e.g. `fix: resolve login bug`)
 - Keep the first line under 50 characters, with no trailing period
 
@@ -47,8 +47,9 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 1. Create a new branch from `main`, named `feature/...` or `fix/...`
 2. Make your changes and commit them following the conventions above
-3. Open a Pull Request against `main`
-4. Once the PR is approved and merged, delete the branch
+3. ⚠️ **Important:** Before pushing your branch or opening a PR, always run `git pull origin main`. The repository runs an automated bot that updates lines of code stats directly in `main`, which can cause local desynchronization (`[rejected] fetch first` errors).
+4. Open a Pull Request against `main`
+5. Once the PR is approved and merged, delete the branch
 
 ## Before submitting a PR
 
@@ -59,7 +60,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 ## Reporting issues
 
-Found a bug or have a suggestion? Please open a [GitHub Issue](https://github.com/LyapinAlexey/Weatherender/issues) with a clear description and, if applicable, steps to reproduce.
+Found a bug or have a suggestion? Please open a [GitHub Issue](https://github.com/Weatherender-foundation/Weatherender/issues) with a clear description and, if applicable, steps to reproduce.
 
 ## Code style
 

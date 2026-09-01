@@ -1,0 +1,49 @@
+name: Production post-mortem
+description: "Document a real infrastructure incident or complex bug after it's resolved"
+title: "[post-mortem]: "
+labels: ["post-mortem"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: "One or two sentences: what broke, and for how long."
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: "What was affected — which endpoint(s), how many requests/users, was it visible externally?"
+    validations:
+      required: true
+  - type: textarea
+    id: timeline
+    attributes:
+      label: Timeline & Detection
+      description: "When was it detected, how (Prometheus alert, user report?), and when was the fix deployed?"
+      placeholder: |
+        - Detected:
+        - Root cause identified:
+        - Fix deployed:
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root Cause
+      description: "What actually caused this — be specific (e.g., a config default, a race condition, a missing check)."
+    validations:
+      required: true
+  - type: textarea
+    id: resolution
+    attributes:
+      label: Resolution
+      description: "What fixed it. Link the PR or commit if available."
+    validations:
+      required: true
+  - type: textarea
+    id: follow_ups
+    attributes:
+      label: Follow-ups
+      description: "Anything still open — a hardening task, a test to add, a doc to update."
