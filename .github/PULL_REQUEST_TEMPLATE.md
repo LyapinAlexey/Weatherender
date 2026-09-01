@@ -13,8 +13,6 @@ Brief description of the change and the motivation behind it.
 
 ## Checklist
 
-> ⚠️ **Notice:** This repo runs an automated bot that pushes lines of code stats directly to `main`. Always run `git pull origin main` before pushing your branch to prevent merge conflicts.
-
 - [ ] I have run `git pull origin main` locally to sync with the automated stats bot
 - [ ] Tests pass locally (`pytest -v`)
 - [ ] New functionality is covered by tests

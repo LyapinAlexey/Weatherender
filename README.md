@@ -113,13 +113,6 @@ To ensure high performance and minimize reliance on external services, the appli
 * **Graceful Degradation:** If the Redis instance becomes temporarily unavailable, the application automatically catches the exception and gracefully falls back to direct API fetching without disrupting the user experience
 * **Database Efficiency:** The automated uptime monitor triggers a lightweight `/api/ping` route that does not open SQLAlchemy sessions or hit the database. This prevents creating redundant connections on the free Supabase tier, keeping the connection pool clean
 
-## 🛠️ Contributing & Development
-
-> ⚠️ **Important Note for Contributors:**
-> This repository uses an automated GitHub Action that recalculates lines of code and updates the stats badge (`![Lines of Code]`) directly in the `main` branch on every push.
->
-> To avoid local repository desynchronization (`[rejected] fetch first` errors), **always run `git pull origin main` before making any new commits or pushing code.**
-
 ## Performance Testing
 
 The application has been load, stress, and spike tested with [k6](https://k6.io/) — both against the live Render deployment and locally via Docker Compose. Full methodology and results, including a real bottleneck investigation (sync → gevent Gunicorn workers), are documented in [`docs/PERFORMANCE.md`](docs/PERFORMANCE.md). Scripts live in `load_tests/`.
