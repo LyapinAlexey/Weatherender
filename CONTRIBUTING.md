@@ -47,9 +47,8 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 
 1. Create a new branch from `main`, named `feature/...` or `fix/...`
 2. Make your changes and commit them following the conventions above
-3. ⚠️ **Important:** Before pushing your branch or opening a PR, always run `git pull origin main`. The repository runs an automated bot that updates lines of code stats directly in `main`, which can cause local desynchronization (`[rejected] fetch first` errors).
-4. Open a Pull Request against `main`
-5. Once the PR is approved and merged, delete the branch
+3. Open a Pull Request against `main`
+4. Once the PR is approved and merged, delete the branch
 
 ## Before submitting a PR
 

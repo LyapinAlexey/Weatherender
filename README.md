@@ -7,7 +7,6 @@ Production-grade weather application with a Flask web interface, a CLI tool, and
 ![CI](https://github.com/LyapinAlexey/Weatherender/actions/workflows/ci.yml/badge.svg)
 [![Release](https://img.shields.io/github/v/release/LyapinAlexey/Weatherender?logo=python&logoColor=306998&link=https%3A%2F%2Fgithub.com%2FLyapinAlexey%2FWeatherender%2Freleases%2Flatest)](https://github.com/LyapinAlexey/Weatherender/releases/latest)
 [![Codecov](https://codecov.io/github/LyapinAlexey/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](https://codecov.io/github/LyapinAlexey/Weatherender)
-[![Lines of Code](https://img.shields.io/github/lines-of-code/Weatherender-foundation/Weatherender?color=007ec6&label=lines%20of%20code)](https://github.com/Weatherender-foundation/Weatherender)
 ![License](https://img.shields.io/badge/SSCI-Custom_License-green) <br>
 ![Python](https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=306998)
 ![Flask](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
@@ -113,13 +112,6 @@ To ensure high performance and minimize reliance on external services, the appli
 * **Redis Integration:** Weather data fetched from WeatherAPI is cached in an Upstash Redis instance with a 5-minute TTL (`REDIS_TTL`). Subsequent requests for the same city are served instantly from the cache, saving external API quotas
 * **Graceful Degradation:** If the Redis instance becomes temporarily unavailable, the application automatically catches the exception and gracefully falls back to direct API fetching without disrupting the user experience
 * **Database Efficiency:** The automated uptime monitor triggers a lightweight `/api/ping` route that does not open SQLAlchemy sessions or hit the database. This prevents creating redundant connections on the free Supabase tier, keeping the connection pool clean
-
-## 🛠️ Contributing & Development
-
-> ⚠️ **Important Note for Contributors:**
-> This repository uses an automated GitHub Action that recalculates lines of code and updates the stats badge (`![Lines of Code]`) directly in the `main` branch on every push.
->
-> To avoid local repository desynchronization (`[rejected] fetch first` errors), **always run `git pull origin main` before making any new commits or pushing code.**
 
 ## Performance Testing
 
