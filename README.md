@@ -1,8 +1,5 @@
 <img src="https://avatars.githubusercontent.com/u/323290598?s=100&v=4" align="left" width="70" style="margin-right: 15px;">
 
-# Weatherender Foundation
-
-Production-grade weather intelligence for skiers.
 # Weatherender
 
 Production-grade weather application with a Flask web interface, a CLI tool, and a high-performance async FastAPI v2 API, built as a portfolio project demonstrating real-world engineering practices, has been developed by Alexey Lyapin.
