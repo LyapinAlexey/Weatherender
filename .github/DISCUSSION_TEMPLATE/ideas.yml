@@ -1,0 +1,28 @@
+name: "💡 Ideas & Feature Requests"
+description: "Share your ideas on how to improve the weather application"
+title: "[Idea]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a great idea for Weatherrender? Let us know what you're thinking!
+  - type: textarea
+    id: pitch
+    attributes:
+      label: "What is your idea?"
+      description: "Briefly describe the feature or improvement you would like to see (e.g., interactive temperature charts, new Prometheus metrics)."
+      placeholder: "I propose to add..."
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: "What problem does this solve?"
+      description: "Why is this useful for users or developers? What is the core motivation?"
+    validations:
+      required: true
+  - type: textarea
+    id: implementation
+    attributes:
+      label: "Technical Implementation (Optional)"
+      description: "If you have any thoughts on how to implement this using FastAPI/Flask/Docker, please share them here."
