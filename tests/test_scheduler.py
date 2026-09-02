@@ -1,6 +1,10 @@
 from unittest.mock import MagicMock, patch
 
-from WEB.scheduler import init_scheduler, run_dbclear_job, try_acquire_leadership
+from weatherender.WEB.scheduler import (
+    init_scheduler,
+    run_dbclear_job,
+    try_acquire_leadership,
+)
 
 
 class TestScheduler:
@@ -16,8 +20,8 @@ class TestScheduler:
         result = try_acquire_leadership(str(lock_file))
         assert result is False
 
-    @patch("WEB.scheduler.clear")
-    @patch("WEB.scheduler.SessionLocal")
+    @patch("weatherender.WEB.scheduler.clear")
+    @patch("weatherender.WEB.scheduler.SessionLocal")
     def test_run_dbclear_job_calls_clear_with_session(
         self, mock_session_local, mock_clear
     ):
@@ -28,16 +32,16 @@ class TestScheduler:
         mock_session_local.assert_called_once()
         mock_clear.assert_called_once_with(fake_session)
 
-    @patch("WEB.scheduler.BackgroundScheduler")
-    @patch("WEB.scheduler.try_acquire_leadership", return_value=False)
+    @patch("weatherender.WEB.scheduler.BackgroundScheduler")
+    @patch("weatherender.WEB.scheduler.try_acquire_leadership", return_value=False)
     def test_scheduler_not_started_when_not_leader(
         self, mock_leadership, mock_scheduler_cls
     ):
         init_scheduler()
         mock_scheduler_cls.assert_not_called()
 
-    @patch("WEB.scheduler.BackgroundScheduler")
-    @patch("WEB.scheduler.try_acquire_leadership", return_value=True)
+    @patch("weatherender.WEB.scheduler.BackgroundScheduler")
+    @patch("weatherender.WEB.scheduler.try_acquire_leadership", return_value=True)
     def test_scheduler_started_when_leader_exist(
         self, mock_leadership, mock_scheduler_cls
     ):

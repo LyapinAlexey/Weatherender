@@ -1,11 +1,14 @@
 # Secret files
 .env
-CLI/weather_key.txt
+weather_report.txt
 
 # Folders of Virtual Python
 venv/
 .venv/
 env/
+dist/
+build/
+*.egg-info/
 
 # Python compilier
 __pycache__/

@@ -1,6 +1,16 @@
-import requests
-from flask import Blueprint, request
-from marshmallow import ValidationError
+import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Annotated
+
+import httpx
+from a2wsgi import WSGIMiddleware
+from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import FileResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from sqlalchemy import text
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -8,105 +18,83 @@ from tenacity import (
     wait_exponential,
 )
 
-from models import SessionLocal, WeatherRequest
+from weatherender.logging_config import setup_logging
+from weatherender.models import WeatherRequest
+from weatherender.snow import get_snow_state
+from weatherender.WEB.app import app as flask_app
 
-try:
-    from .extensions import limiter
-    from .swagger_config import spec
-except ImportError:
-    from swagger_config import spec  # type: ignore[no-redef]
-    from extensions import limiter  # type: ignore[no-redef]
+from .async_cache import cache_service
+from .async_db import AsyncSessionLocal
+from .async_services import AsyncWeatherService
+from .pydantic_schemas import WeatherQueryParams, WeatherResponseV2
 
-from flask import g
-
-from schemas import CityRequestSchema
-from services import WeatherService
-from snow import get_snow_state
-
-api_bp = Blueprint("api", __name__, url_prefix="/api")
+limiter = Limiter(key_func=get_remote_address)
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    client = httpx.AsyncClient(
+        limits=httpx.Limits(max_connections=100, max_keepalive_connections=20)
+    )
+    app.state.http_client = client
+    yield
+    await client.aclose()
+    await cache_service.close()
+
+
+app = FastAPI(
+    title="Weatherender API",
+    description="High-performance async weather and Snow Surface Condition Index (SSCI) API.",
+    version="2.0.0",
+    lifespan=lifespan,
+    docs_url="/v2/docs",
+    redoc_url="/v2/redoc",
+    openapi_url="/v2/openapi.json",
+)
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.get("/api/v2/weather", response_model=WeatherResponseV2)
+@limiter.limit("25/minute")
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=0.2, max=2.0),
-    retry=retry_if_exception_type((requests.RequestException, requests.HTTPError)),
+    retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError)),
     reraise=True,
 )
-@api_bp.route("/weather")
-@limiter.limit("25 per minute")
-def get_weather():
-    """Get weather by city name
-    ---
-    get:
-      parameters:
-        - in: query
-          name: city
-          schema:
-            type: string
-          required: true
-          description: Name of the city
-      responses:
-        200:
-          description: >
-            Successful response with weather data. In addition to the raw
-            WeatherAPI payload (location/current/forecast), the response
-            includes two derived fields:
-            - snow_state: object with a `status` string describing today's
-              snow conditions (e.g. "Powder", "Wet snow", "No snow data" if
-              no forecast data is available).
-            - snow_forecast: array of objects, one per forecast day, each
-              with `date` (string) and `snow_state` (object with `status`),
-              covering the same days as forecast.forecastday.
-        400:
-          description: Invalid or missing city parameter
-        404:
-          description: City not found
-    """
-    if "db_session" not in g:
-        g.db_session = SessionLocal()
-    schema = CityRequestSchema()
-    data = request.args.to_dict()
-    try:
-        load_data = schema.load(data)
-    except ValidationError as e:
-        error = "Error while fetching city: city must be a string and between 1 and 100 characters. City isn't valid"
-        raw_city = data.get("city", "")
-        info_valide_err = WeatherRequest(
-            city=(
-                raw_city
-                if (raw_city and len(raw_city) <= 100)
-                else (raw_city or "")[:95] + "..."
-            ),
-            source="api",
-            success=0,
-            error_message=error,
-        )
-        g.db_session.add(info_valide_err)
-        g.db_session.commit()
-        return {"error": e.messages}, 400
-    city = load_data["city"]
-    weather_data = WeatherService.get_weather(city=city)
+async def get_weather_v2(
+    request: Request, params: Annotated[WeatherQueryParams, Query()]
+) -> WeatherResponseV2:
+    city = params.city
+    client = request.app.state.http_client
+    weather_data = await AsyncWeatherService.get_weather_async(client=client, city=city)
     if "error" in weather_data:
         info_err = WeatherRequest(
             city=str(city),
-            source="api",
+            source="api-v2",
             success=0,
             error_message=weather_data["error"].get("message"),
         )
-        g.db_session.add(info_err)
-        g.db_session.commit()
-        return {"error": weather_data["error"]}, 404
+        async with AsyncSessionLocal() as session:
+            session.add(info_err)
+            await session.commit()
+        raise HTTPException(status_code=404, detail=weather_data["error"])
     else:
         info_suc = WeatherRequest(
             city=city,
-            source="api",
+            source="api-v2",
             temp_c=round(weather_data["current"]["temp_c"], 2),
             condition=weather_data["current"]["condition"]["text"],
             success=1,
             error_message=None,
         )
-        g.db_session.add(info_suc)
-        g.db_session.commit()
+        async with AsyncSessionLocal() as session:
+            session.add(info_suc)
+            await session.commit()
     forecast_days = weather_data.get("forecast", {}).get("forecastday", [])
     current = weather_data.get("current", {})
 
@@ -164,15 +152,25 @@ def get_weather():
         )
 
     weather_data["snow_forecast"] = snow_forecast
-    return weather_data, 200
+    return WeatherResponseV2.model_validate(weather_data)
 
 
-@api_bp.route("/apispec.json")
-@limiter.limit("25 per minute")
-def get_apispec():
-    return spec.to_dict()
+@app.get("/api/v2/health")
+async def health_check() -> dict[str, str]:
+    async with AsyncSessionLocal() as session:
+        try:
+            await session.execute(text("SELECT 1"))
+            logger.info("Health check passed")
+            return {"status": "ok"}
+        except Exception:
+            logger.exception("Health check error")
+            raise HTTPException(status_code=503, detail="503 Service Unavailable")
 
 
-@api_bp.route("/ping", methods=["GET", "HEAD"])
-def ping() -> tuple[dict[str, str], int]:
-    return {"status": "ok"}, 200
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon() -> FileResponse:
+    """Created to fix the 404 icon error."""
+    return FileResponse("favicon.png")
+
+
+app.mount("/", WSGIMiddleware(flask_app))

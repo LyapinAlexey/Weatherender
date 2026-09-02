@@ -3,15 +3,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from CLI.main import Main, WeatherReport
+from weatherender.CLI.main import Main, WeatherReport
 
 
 class TestCLI:
     @pytest.fixture(autouse=True)
     def mock_dependencies(self):
-        with patch("CLI.main.Config.validate"), patch(
-            "CLI.main.SessionLocal"
-        ) as mock_session_cls:
+        with (
+            patch("weatherender.CLI.main.Config.validate"),
+            patch("weatherender.CLI.main.SessionLocal") as mock_session_cls,
+        ):
             mock_db = MagicMock()
             mock_session_cls.return_value = mock_db
             yield mock_db
@@ -35,7 +36,7 @@ class TestCLI:
                 day_dict.setdefault("condition", {"text": "Sunny"})
         return data
 
-    @patch("CLI.main.get_snow_state", return_value={"status": "No snow"})
+    @patch("weatherender.CLI.main.get_snow_state", return_value={"status": "No snow"})
     def test_weather_report_display(self, mock_snow, prepared_weather_response, capsys):
         report = WeatherReport(prepared_weather_response, for_printing=False)
         report.display()
@@ -44,7 +45,7 @@ class TestCLI:
         city_name = prepared_weather_response.get("location", {}).get("name", "Berlin")
         assert city_name in captured.out
 
-    @patch("CLI.main.get_snow_state", return_value={"status": "No snow"})
+    @patch("weatherender.CLI.main.get_snow_state", return_value={"status": "No snow"})
     def test_weather_report_for_printing(
         self, mock_snow, prepared_weather_response, capsys
     ):
@@ -54,11 +55,10 @@ class TestCLI:
 
         city_name = prepared_weather_response.get("location", {}).get("name", "Berlin")
         assert city_name in captured.out
-        # Проверяем, что в секции снега нет спецсимволов при печати
         assert "\033[1mNo snow\033[0m" not in captured.out
 
-    @patch("CLI.main.get_snow_state", return_value={"status": "No snow"})
-    @patch("CLI.main.WeatherService")
+    @patch("weatherender.CLI.main.get_snow_state", return_value={"status": "No snow"})
+    @patch("weatherender.CLI.main.WeatherService")
     def test_main_run_success_no_print(
         self,
         mock_service_cls,
@@ -82,9 +82,9 @@ class TestCLI:
         assert mock_dependencies.add.called
         assert mock_dependencies.commit.called
 
-    @patch("CLI.main.get_snow_state", return_value={"status": "No snow"})
-    @patch("CLI.main.subprocess.run")
-    @patch("CLI.main.WeatherService")
+    @patch("weatherender.CLI.main.get_snow_state", return_value={"status": "No snow"})
+    @patch("weatherender.CLI.main.subprocess.run")
+    @patch("weatherender.CLI.main.WeatherService")
     def test_main_run_success_with_print(
         self,
         mock_service_cls,
@@ -107,7 +107,7 @@ class TestCLI:
         assert "[+] Document successfully printed!" in captured.out
         assert mock_subproc.called
 
-    @patch("CLI.main.WeatherService")
+    @patch("weatherender.CLI.main.WeatherService")
     def test_main_run_error_handling(self, mock_service_cls, capsys):
         mock_service = MagicMock()
         mock_service.get_city_by_ip.side_effect = Exception("IP resolution error")

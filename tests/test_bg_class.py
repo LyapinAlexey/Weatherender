@@ -1,4 +1,4 @@
-from bg_class import determine_bg_class
+from weatherender.bg_class import determine_bg_class
 
 
 class TestBgClass:

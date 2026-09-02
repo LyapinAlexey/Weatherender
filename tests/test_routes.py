@@ -2,8 +2,8 @@ from unittest.mock import MagicMock, patch
 
 
 class TestRoutes:
-    @patch("WEB.app.SessionLocal")
-    @patch("WEB.app.Config")
+    @patch("weatherender.WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.Config")
     def test_index_get_no_api_key_shows_key_prompt(
         self, mock_config, mock_session_local, client
     ):
@@ -13,10 +13,10 @@ class TestRoutes:
         assert response.status_code == 200
         assert b"API key is missing" in response.data
 
-    @patch("WEB.app.SessionLocal")
-    @patch("WEB.app.Config")
-    @patch("WEB.app.WeatherService.get_weather")
-    @patch("WEB.app.WeatherService.get_city_by_ip")
+    @patch("weatherender.WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.Config")
+    @patch("weatherender.WEB.app.WeatherService.get_weather")
+    @patch("weatherender.WEB.app.WeatherService.get_city_by_ip")
     def test_index_get_success_shows_weather(
         self,
         mock_get_city,
@@ -34,10 +34,10 @@ class TestRoutes:
         assert response.status_code == 200
         assert b"Berlin" in response.data
 
-    @patch("WEB.app.SessionLocal")
-    @patch("WEB.app.Config")
-    @patch("WEB.app.WeatherService.get_weather")
-    @patch("WEB.app.WeatherService.get_city_by_ip")
+    @patch("weatherender.WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.Config")
+    @patch("weatherender.WEB.app.WeatherService.get_weather")
+    @patch("weatherender.WEB.app.WeatherService.get_city_by_ip")
     def test_index_post_valid_city_from_form(
         self,
         mock_get_city,
@@ -55,10 +55,10 @@ class TestRoutes:
         assert b"Berlin" in response.data
         mock_get_city.assert_not_called()
 
-    @patch("WEB.app.SessionLocal")
-    @patch("WEB.app.Config")
-    @patch("WEB.app.WeatherService.get_weather")
-    @patch("WEB.app.WeatherService.get_city_by_ip")
+    @patch("weatherender.WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.Config")
+    @patch("weatherender.WEB.app.WeatherService.get_weather")
+    @patch("weatherender.WEB.app.WeatherService.get_city_by_ip")
     def test_index_post_invalid_city_from_form(
         self, mock_get_city, mock_get_weather, mock_config, mock_session_local, client
     ):
@@ -69,10 +69,10 @@ class TestRoutes:
         assert b"city must be a string" in response.data
         mock_get_city.assert_not_called()
 
-    @patch("WEB.app.SessionLocal")
-    @patch("WEB.app.Config")
-    @patch("WEB.app.WeatherService.get_weather")
-    @patch("WEB.app.WeatherService.get_city_by_ip")
+    @patch("weatherender.WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.Config")
+    @patch("weatherender.WEB.app.WeatherService.get_weather")
+    @patch("weatherender.WEB.app.WeatherService.get_city_by_ip")
     def test_index_post_city_not_found_shows_error(
         self, mock_get_city, mock_get_weather, mock_config, mock_session_local, client
     ):
@@ -88,7 +88,7 @@ class TestRoutes:
         )  # &#39; is the HTML entity for a single quote
         mock_get_city.assert_not_called()
 
-    @patch("WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.SessionLocal")
     def test_health_check_db_ok_returns_200(self, mock_session_local, client):
         mock_session = MagicMock()
         mock_session_local.return_value = mock_session
@@ -97,7 +97,7 @@ class TestRoutes:
         assert data["status"] == "ok"
         assert response.status_code == 200
 
-    @patch("WEB.app.SessionLocal")
+    @patch("weatherender.WEB.app.SessionLocal")
     def test_health_check_db_error_returns_503(self, mock_session_local, client):
         mock_session = MagicMock()
         mock_session_local.return_value = mock_session
@@ -107,8 +107,8 @@ class TestRoutes:
         assert data["status"] == "error"
         assert response.status_code == 503
 
-    @patch("WEB.api_routes.SessionLocal")
-    @patch("WEB.api_routes.WeatherService.get_weather")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.WeatherService.get_weather")
     def test_index_get_success_return_weather(
         self, mock_get_weather, mock_session_local, client, fake_weather_response
     ):
@@ -120,8 +120,8 @@ class TestRoutes:
         assert "error" not in data
         assert data["location"]["name"] == "Berlin"
 
-    @patch("WEB.api_routes.SessionLocal")
-    @patch("WEB.api_routes.WeatherService.get_weather")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.WeatherService.get_weather")
     def test_index_city_not_found(self, mock_get_weather, mock_session_local, client):
         mock_session_local.return_value = MagicMock()
         mock_get_weather.return_value = {
@@ -133,7 +133,7 @@ class TestRoutes:
         assert "error" in data
         assert data["error"]["message"] == "City 'Invalid-city' not found."
 
-    @patch("WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
     def test_api_weather_missing_city_param(self, mock_session_local, client):
         mock_session_local.return_value = MagicMock()
         response = client.get("/api/weather")
@@ -141,7 +141,7 @@ class TestRoutes:
         assert response.status_code == 400
         assert data["error"]["city"] == ["Missing data for required field."]
 
-    @patch("WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
     def test_weather_city_is_none(self, mock_session_local, client):
         mock_session_local.return_value = MagicMock()
         response = client.get("/api/weather?city=")
@@ -160,8 +160,8 @@ class TestRoutes:
             response = client.get("/api/ping")
             assert response.status_code != 429
 
-    @patch("WEB.api_routes.SessionLocal")
-    @patch("WEB.api_routes.WeatherService.get_weather")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.WeatherService.get_weather")
     def test_api_weather_includes_snow_state(
         self, mock_get_weather, mock_session_local, client, fake_weather_response
     ):
@@ -179,8 +179,8 @@ class TestRoutes:
         assert data["snow_forecast"][0]["date"] == "2026-07-16"
         assert "status" in data["snow_forecast"][0]["snow_state"]
 
-    @patch("WEB.api_routes.SessionLocal")
-    @patch("WEB.api_routes.WeatherService.get_weather")
+    @patch("weatherender.WEB.api_routes.SessionLocal")
+    @patch("weatherender.WEB.api_routes.WeatherService.get_weather")
     def test_api_weather_no_forecast_days(
         self, mock_get_weather, mock_session_local, client
     ):

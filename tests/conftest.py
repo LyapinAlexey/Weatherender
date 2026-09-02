@@ -8,9 +8,9 @@ from httpx import ASGITransport
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from API import app as api_app
-from models import Base
-from WEB import app as flask_app
+from weatherender.API import app as api_app
+from weatherender.models import Base
+from weatherender.WEB import app as flask_app
 
 TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 if TEST_DATABASE_URL is None:
@@ -94,7 +94,7 @@ async def api_client():
 
 @pytest_asyncio.fixture(autouse=True)
 async def reset_cache_client():
-    from API.async_cache import cache_service
+    from weatherender.API.async_cache import cache_service
 
     if cache_service.client is not None:
         try:
@@ -113,7 +113,7 @@ async def reset_cache_client():
 
 @pytest_asyncio.fixture(autouse=True)
 async def reset_limiter():
-    from API.main import limiter
+    from weatherender.API.main import limiter
 
     limiter.reset()
     yield

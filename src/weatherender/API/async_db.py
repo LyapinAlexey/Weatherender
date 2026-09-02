@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from config import Config
+from weatherender.config import Config
 
 if Config.DATABASE_URL is None:
     raise ValueError("DATABASE_URL is not set, cannot build ASYNC_DATABASE_URL")

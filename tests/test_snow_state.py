@@ -1,6 +1,6 @@
 import pytest
 
-from snow import get_snow_state
+from weatherender.snow import get_snow_state
 
 
 @pytest.mark.parametrize(  # Parametrized tests

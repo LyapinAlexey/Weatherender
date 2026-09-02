@@ -14,7 +14,7 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(log_data)
 
 
-def setup_logging():
+def setup_logging() -> None:
     """Configure root logging for the whole application.
     Call this once, at application startup (WEB and CLI entry points)."""
     log_level = os.getenv("LOG_LEVEL", "INFO").upper()

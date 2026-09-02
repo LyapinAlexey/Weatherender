@@ -3,13 +3,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-from API.main import limiter
+from weatherender.API.main import limiter
 
 
 class TestApiRoutes:
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncSessionLocal")
     async def test_health_check_v2(self, mock_session_local, api_client):
         mock_session = AsyncMock()
         mock_session_local.return_value.__aenter__.return_value = mock_session
@@ -19,8 +19,8 @@ class TestApiRoutes:
         assert response.json() == {"status": "ok"}
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
-    @patch("API.main.AsyncWeatherService.get_weather_async")
+    @patch("weatherender.API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncWeatherService.get_weather_async")
     async def test_get_weather_v2_success(
         self, mock_get_weather, mock_session_local, api_client, fake_weather_response
     ):
@@ -43,8 +43,8 @@ class TestApiRoutes:
         assert data["snow_forecast"][0]["date"] == "2026-07-16"
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
-    @patch("API.main.AsyncWeatherService.get_weather_async")
+    @patch("weatherender.API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncWeatherService.get_weather_async")
     async def test_get_weather_v2_city_not_found(
         self, mock_get_weather, mock_session_local, api_client
     ):
@@ -84,7 +84,7 @@ class TestApiRoutes:
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncSessionLocal")
     async def test_health_check_v2_db_error_returns_503(
         self, mock_session_local, api_client
     ):
@@ -96,8 +96,8 @@ class TestApiRoutes:
         assert response.status_code == 503
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
-    @patch("API.main.AsyncWeatherService.get_weather_async")
+    @patch("weatherender.API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncWeatherService.get_weather_async")
     async def test_get_weather_v2_no_forecast_days(
         self, mock_get_weather, mock_session_local, api_client
     ):
@@ -116,8 +116,8 @@ class TestApiRoutes:
         assert data["snow_forecast"] == []
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
-    @patch("API.main.AsyncWeatherService.get_weather_async")
+    @patch("weatherender.API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncWeatherService.get_weather_async")
     async def test_get_weather_v2_rate_limit(
         self, mock_get_weather, mock_session_local, api_client
     ):
@@ -138,8 +138,8 @@ class TestApiRoutes:
         assert "Rate limit exceeded" in response.text
 
     @pytest.mark.asyncio
-    @patch("API.main.AsyncSessionLocal")
-    @patch("API.main.AsyncWeatherService.get_weather_async")
+    @patch("weatherender.API.main.AsyncSessionLocal")
+    @patch("weatherender.API.main.AsyncWeatherService.get_weather_async")
     async def test_get_weather_v2_retries_on_transient_error(
         self, mock_get_weather, mock_session_local, fake_weather_response, api_client
     ):
