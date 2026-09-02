@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weatherender"
+version = "2.0.0"
+description = "Production-grade weather intelligence for skiers"
+readme = "README.md"
+authors = [{ name = "Alexey Lyapin", email = "lehacomp16@gmail.com" }]
+license = { text = "SSCI Custom License v1.1" }
+requires-python = ">=3.13"
+dynamic = ["dependencies"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[project.scripts]
+weatherender = "weatherender.CLI.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["*"]
+exclude = ["tests*", "venv*", "__pycache__*", ".vscode", ".ruff_cache", ".pytest_cache", ".mypy_cache", ".env", ".coverage"]

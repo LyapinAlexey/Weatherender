@@ -2,9 +2,9 @@ from unittest.mock import MagicMock, patch
 
 from redis.exceptions import RedisError  # type: ignore[import-untyped]
 
-from cache import CacheService
-from config import Config
-from services import WeatherService
+from weatherender.cache import CacheService
+from weatherender.config import Config
+from weatherender.services import WeatherService
 
 
 class TestCache:
@@ -54,7 +54,7 @@ class TestCache:
         cache.client.set = MagicMock(side_effect=RedisError("Write error"))
         cache.set("weather:London", {"temp": 15})
 
-    @patch("services.cache_service")
+    @patch("weatherender.services.cache_service")
     @patch("requests.get")
     def test_get_weather_cache_hit(self, mock_requests, mock_cache):
         mock_cache.get.return_value = {"city": "London", "temp": 15}
@@ -63,7 +63,7 @@ class TestCache:
         mock_cache.get.assert_called_once_with("weather:london")
         mock_requests.assert_not_called()
 
-    @patch("services.cache_service")
+    @patch("weatherender.services.cache_service")
     @patch("requests.get")
     def test_get_weather_cache_miss_and_set(self, mock_requests, mock_cache):
         mock_cache.get.return_value = None

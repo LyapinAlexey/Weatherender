@@ -1,17 +1,14 @@
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 import platform
 import subprocess
+import sys
 from datetime import datetime
 
-from config import Config
-from logging_config import setup_logging
-from models import SessionLocal, WeatherRequest
-from services import WeatherService
-from snow import get_snow_state
+from weatherender.config import Config
+from weatherender.logging_config import setup_logging
+from weatherender.models import SessionLocal, WeatherRequest
+from weatherender.services import WeatherService
+from weatherender.snow import get_snow_state
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -225,7 +222,7 @@ class Main:
         report = WeatherReport(data, for_printing=print_req)
         if not print_req:
             return report.display()
-        fn, os_t = "CLI/weather_report.txt", platform.system()
+        fn, os_t = "weather_report.txt", platform.system()
         orig = sys.stdout
         with open(fn, "w", encoding="utf-8-sig" if os_t == "Windows" else "utf-8") as f:
             sys.stdout = f

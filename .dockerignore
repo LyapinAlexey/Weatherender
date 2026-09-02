@@ -17,6 +17,9 @@ htmlcov/
 # IDE Configs
 .vscode/
 .idea/
+dist/
+build/
+*.egg-info/
 
 # Git and CI/CD
 .git/

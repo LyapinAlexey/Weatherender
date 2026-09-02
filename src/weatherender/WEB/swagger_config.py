@@ -2,7 +2,7 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 
-from schemas import CityRequestSchema
+from weatherender.schemas import CityRequestSchema
 
 spec = APISpec(
     title="Weather-api",

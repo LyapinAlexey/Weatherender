@@ -7,7 +7,7 @@ from typing import Any, Optional
 import redis.asyncio as redis
 from redis.exceptions import RedisError
 
-from config import Config
+from weatherender.config import Config
 
 logger = logging.getLogger(__name__)
 

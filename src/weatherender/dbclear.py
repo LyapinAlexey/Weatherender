@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
 
-from logging_config import setup_logging
-from models import SessionLocal, WeatherRequest
+from weatherender.logging_config import setup_logging
+from weatherender.models import SessionLocal, WeatherRequest
 
 setup_logging()
 logger = logging.getLogger(__name__)

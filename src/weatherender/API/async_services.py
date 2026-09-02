@@ -2,12 +2,8 @@ import logging
 
 import httpx
 
-try:
-    from .async_cache import AsyncCacheService
-except ImportError:
-    from async_cache import AsyncCacheService  # type: ignore[no-redef]
-
-from config import Config
+from weatherender.API.async_cache import AsyncCacheService
+from weatherender.config import Config
 
 logger = logging.getLogger(__name__)
 cache_service = AsyncCacheService()

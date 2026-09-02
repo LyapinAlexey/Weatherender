@@ -2,38 +2,29 @@ from psycogreen.gevent import patch_psycopg
 
 patch_psycopg()
 
-import os
-import sys
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
+import os
 from datetime import datetime
 
-try:
-    from .api_routes import api_bp, get_weather
-    from .extensions import limiter
-    from .scheduler import init_scheduler
-    from .swagger_config import spec
-except ImportError:
-    from api_routes import api_bp, get_weather  # type: ignore[no-redef]
-    from extensions import limiter  # type: ignore[no-redef]
-    from scheduler import init_scheduler  # type: ignore[no-redef]
-    from swagger_config import spec  # type: ignore[no-redef]
-
-from flask import Flask, g, render_template, request, session
+from flask import Flask, Response, g, render_template, request, session
 from flask_swagger_ui import get_swaggerui_blueprint
 from flask_talisman import Talisman
 from marshmallow import ValidationError
 from prometheus_flask_exporter import PrometheusMetrics
 from sqlalchemy import text
 
-from bg_class import determine_bg_class
-from config import Config
-from logging_config import setup_logging
-from models import SessionLocal, WeatherRequest
-from schemas import CityRequestSchema
-from services import WeatherService
-from snow import get_snow_state
+from weatherender.bg_class import determine_bg_class
+from weatherender.config import Config
+from weatherender.logging_config import setup_logging
+from weatherender.models import SessionLocal, WeatherRequest
+from weatherender.schemas import CityRequestSchema
+from weatherender.services import WeatherService
+from weatherender.snow import get_snow_state
+
+from .api_routes import api_bp, get_weather
+from .extensions import limiter
+from .scheduler import init_scheduler
+from .swagger_config import spec
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -46,7 +37,7 @@ app = Flask(__name__)
 # reverse registration order, so this hook must be registered
 # before Talisman to ensure our CSP override is applied last.
 @app.after_request
-def add_security_headers(response):
+def add_security_headers(response) -> Response:
     if request.path.startswith(SWAGGER_URL):
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self' 'unsafe-inline'"

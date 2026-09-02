@@ -1,9 +1,10 @@
 import logging
+from typing import Any
 
 import requests
 
-from cache import CacheService
-from config import Config
+from weatherender.cache import CacheService
+from weatherender.config import Config
 
 logger = logging.getLogger(__name__)
 cache_service = CacheService()
@@ -77,7 +78,7 @@ class WeatherService:
     @staticmethod
     def get_weather(
         city: str | tuple[float, float], api_key: str | None = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         if isinstance(city, tuple):
             city = f"{city[0]},{city[1]}"
         else:
@@ -86,7 +87,7 @@ class WeatherService:
         cache_key = f"weather:{city.strip().lower()}"
         cached_data = cache_service.get(cache_key)
         if cached_data:
-            return cached_data
+            return cached_data  # type: ignore
 
         if not active_key:
             return {
@@ -128,7 +129,7 @@ class WeatherService:
             try:
                 data = response.json()
                 cache_service.set(cache_key, data)
-                return data
+                return data  # type: ignore
             except ValueError:
                 return {
                     "error": {

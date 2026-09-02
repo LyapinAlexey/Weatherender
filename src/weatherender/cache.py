@@ -2,10 +2,10 @@ import json
 import logging
 from typing import Any, Optional
 
-import redis  # type: ignore[import-untyped]
-from redis.exceptions import RedisError  # type: ignore[import-untyped]
+import redis
+from redis.exceptions import RedisError
 
-from config import Config
+from weatherender.config import Config
 
 logger = logging.getLogger(__name__)
 

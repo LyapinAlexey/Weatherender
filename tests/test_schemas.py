@@ -1,7 +1,7 @@
 import pytest
 from marshmallow import ValidationError
 
-from schemas import CityRequestSchema
+from weatherender.schemas import CityRequestSchema
 
 
 class TestSchemas:

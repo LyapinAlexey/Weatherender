@@ -5,13 +5,13 @@ import pytest
 import respx
 from httpx import Response
 
-from API.async_services import AsyncWeatherService
-from config import Config
+from weatherender.API.async_services import AsyncWeatherService
+from weatherender.config import Config
 
 
 @pytest.mark.asyncio
 class TestAsyncWeatherService:
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_cache_hit(self, mock_cache_get):
         mock_cache_get.return_value = {"cached": "data"}
         async with httpx.AsyncClient() as client:
@@ -30,7 +30,7 @@ class TestAsyncWeatherService:
             assert "API key is missing" in result["error"]["message"]
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_success_api_call(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(
@@ -47,7 +47,7 @@ class TestAsyncWeatherService:
             assert result["location"]["name"] == "Berlin"
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_unauthorized(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(return_value=Response(401))
@@ -58,7 +58,7 @@ class TestAsyncWeatherService:
             assert "Invalid API key" in result["error"]["message"]
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_city_not_found(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(return_value=Response(400))
@@ -69,7 +69,7 @@ class TestAsyncWeatherService:
             assert "not found" in result["error"]["message"]
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_invalid_content_type(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(
@@ -84,7 +84,7 @@ class TestAsyncWeatherService:
             assert "invalid response format" in result["error"]["message"]
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_other_status_error(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(
@@ -100,7 +100,7 @@ class TestAsyncWeatherService:
             )
 
     @respx.mock
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_json_decode_error(self, mock_cache_get):
         mock_cache_get.return_value = None
         respx.get(Config.WEATHER_URL).mock(
@@ -114,7 +114,7 @@ class TestAsyncWeatherService:
             )
             assert "Error parsing response" in result["error"]["message"]
 
-    @patch("API.async_services.cache_service.get", new_callable=AsyncMock)
+    @patch("weatherender.API.async_services.cache_service.get", new_callable=AsyncMock)
     async def test_get_weather_async_tuple_city(self, mock_cache_get):
         mock_cache_get.return_value = None
 

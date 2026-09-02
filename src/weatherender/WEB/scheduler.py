@@ -2,9 +2,9 @@ import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
 
-from dbclear import clear
-from logging_config import logging
-from models import SessionLocal
+from weatherender.dbclear import clear
+from weatherender.logging_config import logging
+from weatherender.models import SessionLocal
 
 LOCK_PATH = "/tmp/dbclear_scheduler.lock"
 logger = logging.getLogger(__name__)

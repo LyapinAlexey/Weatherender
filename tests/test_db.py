@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 
-from models import WeatherRequest
+from weatherender.models import WeatherRequest
 
 
 class TestDB:
