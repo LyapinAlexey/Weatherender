@@ -1,27 +1,34 @@
-# .github/workflows/publish-github.yml
-name: Publish to GitHub Packages
+name: Docker Build & Publish
 
 on:
   release:
     types: [published]
+  push:
+    branches: [main]
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          python-version: '3.13'
-      - name: Build package
-        run: |
-          pip install build
-          python -m build
-      - name: Publish to GitHub Packages
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://upload.pypi.org/legacy/
+          registry: ghcr.io
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/weatherrender/API/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/weatherrender-foundation/weatherrender-api:latest
+            ghcr.io/weatherrender-foundation/weatherrender-api:${{ github.sha }}
