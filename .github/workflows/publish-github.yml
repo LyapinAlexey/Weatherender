@@ -1,0 +1,27 @@
+# .github/workflows/publish-github.yml
+name: Publish to GitHub Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build package
+        run: |
+          pip install build
+          python -m build
+      - name: Publish to GitHub Packages
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://upload.pypi.org/legacy/
+          password: ${{ secrets.GITHUB_TOKEN }}
