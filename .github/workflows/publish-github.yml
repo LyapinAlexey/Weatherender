@@ -27,7 +27,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: src/weatherrender/API/Dockerfile
+          file: src/weatherender/API/Dockerfile
           push: true
           tags: |
             ghcr.io/weatherrender-foundation/weatherrender-api:latest
