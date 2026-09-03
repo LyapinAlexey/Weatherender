@@ -241,3 +241,7 @@ class Main:
 
 if __name__ == "__main__":
     Main().run()
+
+
+def main() -> None:
+    Main().run()
