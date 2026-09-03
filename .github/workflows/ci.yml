@@ -1,4 +1,4 @@
-name: Weather
+name: Weatherender
 on:
   push:
     branches: [main]
