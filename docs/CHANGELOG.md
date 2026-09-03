@@ -4,6 +4,20 @@ All notable changes to **Weatherender** (formerly *Weather*), organized by date 
 
 > Note: the repository's earliest history (24–30 June) contains a run of commits literally named `v1.0.0` through `v4.2.4` — an early, pre-conventional-commits naming habit rather than meaningful version releases. They're omitted below in favor of the descriptive commit messages from the same period, once a proper (`feat:`/`fix:`/`docs:`) commit style was adopted.
 
+## 2026-09-03 — src layout, PyPI package, GHCR image
+
+- Packaged the project as an installable Python distribution (`pyproject.toml`, name `weatherender==2.0.0`) with a `src/weatherender/` layout. Console script: `weatherender` → `weatherender.CLI.main:main`.
+- Published to PyPI: `pip install weatherender`.
+- Published the API image to GitHub Container Registry: `ghcr.io/weatherender-foundation/weatherender-api` (`latest` + commit SHA), via `.github/workflows/publish-github.yml`.
+- Moved the repository under the `Weatherender-foundation` GitHub organization.
+- Unified local ports with CI: Flask **5001**, FastAPI **8001**, Postgres **5432**, Redis **6379**, test DB host port **5433**.
+- Fixed Docker `CMD` module paths after the src-layout move:
+  - `gunicorn weatherender.WEB.app:app`
+  - `uvicorn weatherender.API.main:app`
+  - `python -m weatherender.CLI.main`
+- Fixed CI pytest volume mount (`${{ github.workspace }}:/app`) so `tests/` is visible inside the CLI container.
+- Updated README, API, architecture, and deployment docs to match the packaged layout, GHCR image, and organization URLs.
+
 ## 2026-08-31 — Fixed retry decorator ordering & test isolation for rate limiter
 - Fixed a decorator-ordering bug in `API/main.py`: `@retry(...)` (tenacity) was placed *outside* `@app.get(...)`, so FastAPI registered the pre-retry function in its route table — the retry logic was present in the code but never actually executed on real requests. Moved `@retry` to the innermost position (closest to `async def`, below `@limiter.limit`), matching the project's existing decorator-ordering convention for `@pytest.mark.asyncio`/`@patch`.
 - Added `test_get_weather_v2_retries_on_transient_error` (`tests/test_api_routes.py`): mocks `AsyncWeatherService.get_weather_async` with a `side_effect` list (`httpx.RequestError` on the first call, a successful response on the second), confirming the endpoint still returns `200` after a transient upstream failure.
