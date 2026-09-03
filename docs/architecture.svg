@@ -1,22 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 900" width="100%" height="100%" style="background-color: #121212; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 920" width="100%" height="100%" style="background-color: #121212; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
 
   <defs>
-    <!-- Arrow Marker -->
     <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#7f8c8d" />
     </marker>
   </defs>
 
   <style>
-    .title { fill: #ffffff; font-size: 16px; font-weight: bold; }
-    .subtitle { fill: #a0a0a0; font-size: 12px; }
     .box-title { fill: #ffffff; font-size: 14px; font-weight: bold; text-anchor: middle; }
     .box-desc { fill: #d0d0d0; font-size: 11px; text-anchor: middle; }
     .node-container { fill: #1e1e1e; stroke: #333333; stroke-width: 1.5; rx: 12px; }
     .edge { stroke: #666666; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
-    .dashed-edge { stroke: #666666; stroke-width: 1.5; stroke-dasharray: 4; fill: none; marker-end: url(#arrow); }
-
-    /* Colors */
     .bg-entry { fill: #2a2a2a; stroke: #444; }
     .bg-blue { fill: #1a4971; stroke: #2980b9; }
     .bg-purple { fill: #4a235a; stroke: #7d3c98; }
@@ -27,189 +21,208 @@
     .bg-pink { fill: #641e1e; stroke: #c0392b; }
   </style>
 
-  <!-- Testing & CI/CD Block -->
-  <rect x="30" y="30" width="280" height="180" class="node-container" />
-  <text x="170" y="55" class="box-title">Testing &amp; CI/CD</text>
+  <!-- Testing & CI/CD -->
+  <rect x="30" y="20" width="300" height="200" class="node-container" />
+  <text x="180" y="45" class="box-title">Testing & CI/CD</text>
 
-  <rect x="45" y="75" width="115" height="45" rx="6" class="bg-entry" />
-  <text x="102" y="95" class="box-desc" font-weight="bold">.github/workflows/</text>
-  <text x="102" y="110" class="box-desc">CI pipeline</text>
+  <rect x="45" y="65" width="125" height="50" rx="6" class="bg-entry" />
+  <text x="107" y="85" class="box-desc" font-weight="bold">ci.yml</text>
+  <text x="107" y="102" class="box-desc">pytest / mypy / k6</text>
 
-  <rect x="180" y="75" width="115" height="45" rx="6" class="bg-darkgreen" />
-  <text x="237" y="95" class="box-desc" font-weight="bold">tests/: pytest,</text>
-  <text x="237" y="110" class="box-desc">mocks &amp; integration</text>
+  <rect x="185" y="65" width="125" height="50" rx="6" class="bg-darkgreen" />
+  <text x="247" y="85" class="box-desc" font-weight="bold">publish-github.yml</text>
+  <text x="247" y="102" class="box-desc">GHCR image push</text>
 
-  <rect x="180" y="145" width="115" height="45" rx="6" class="bg-entry" />
-  <text x="237" y="172" class="box-desc">Docker Compose stack</text>
+  <rect x="45" y="130" width="125" height="70" rx="6" class="bg-darkgreen" />
+  <text x="107" y="152" class="box-desc" font-weight="bold">tests/: pytest</text>
+  <text x="107" y="168" class="box-desc">unit, mocks,</text>
+  <text x="107" y="184" class="box-desc">Postgres integration</text>
 
-  <path d="M 160 97 L 178 97" class="edge" />
-  <path d="M 160 105 L 178 165" class="edge" />
+  <rect x="185" y="130" width="125" height="70" rx="6" class="bg-entry" />
+  <text x="247" y="152" class="box-desc" font-weight="bold">Compose stack</text>
+  <text x="247" y="168" class="box-desc">web :5001 Flask only</text>
+  <text x="247" y="184" class="box-desc">api :8001 Flask+v2</text>
 
-  <!-- Data Management Block -->
-  <rect x="30" y="440" width="220" height="170" class="node-container" />
-  <text x="140" y="465" class="box-title">Data management</text>
+  <!-- Data management -->
+  <rect x="30" y="450" width="220" height="170" class="node-container" />
+  <text x="140" y="475" class="box-title">Data management</text>
 
-  <rect x="50" y="485" width="180" height="40" rx="6" class="bg-purple" />
-  <text x="140" y="510" class="box-desc">alembic/: DB migrations</text>
+  <rect x="50" y="495" width="180" height="40" rx="6" class="bg-purple" />
+  <text x="140" y="520" class="box-desc">alembic/: DB migrations</text>
 
-  <path d="M 70 550 Q 140 535 210 550 L 210 595 Q 140 610 70 595 Z" class="bg-pink" />
-  <text x="140" y="577" class="box-desc">Postgres: schema</text>
+  <path d="M 70 560 Q 140 545 210 560 L 210 605 Q 140 620 70 605 Z" class="bg-pink" />
+  <text x="140" y="587" class="box-desc">Postgres: schema</text>
 
-  <!-- Client Types (Top Row) -->
-  <g transform="translate(420, 30)">
-    <ellipse cx="40" cy="20" rx="40" ry="18" class="bg-entry" />
-    <text x="40" y="24" class="box-desc">Client / browser</text>
-    <text x="40" y="50" class="box-desc" fill="#888">HTML / Gunicorn</text>
+  <!-- Clients -->
+  <g transform="translate(360, 20)">
+    <ellipse cx="55" cy="28" rx="52" ry="20" class="bg-entry" />
+    <text x="55" y="24" class="box-desc">Browser</text>
+    <text x="55" y="38" class="box-desc" fill="#888">:5001 Flask only</text>
+    <text x="55" y="62" class="box-desc" fill="#888">HTML / Gunicorn</text>
 
-    <ellipse cx="150" cy="20" rx="40" ry="18" class="bg-entry" />
-    <text x="150" y="24" class="box-desc">API consumer</text>
-    <text x="150" y="50" class="box-desc" fill="#888">JSON v1 / Swagger</text>
+    <ellipse cx="175" cy="28" rx="52" ry="20" class="bg-entry" />
+    <text x="175" y="24" class="box-desc">API consumer</text>
+    <text x="175" y="38" class="box-desc" fill="#888">v1 on :5001 or :8001</text>
+    <text x="175" y="62" class="box-desc" fill="#888">JSON / Swagger</text>
 
-    <ellipse cx="270" cy="20" rx="50" ry="18" class="bg-entry" />
-    <text x="270" y="24" class="box-desc">Async API consumer</text>
-    <text x="270" y="50" class="box-desc" fill="#888">JSON v2 / async</text>
+    <ellipse cx="310" cy="28" rx="58" ry="20" class="bg-entry" />
+    <text x="310" y="24" class="box-desc">Async consumer</text>
+    <text x="310" y="38" class="box-desc" fill="#888">v2 only on :8001</text>
+    <text x="310" y="62" class="box-desc" fill="#888">JSON v2 / async</text>
 
-    <ellipse cx="380" cy="20" rx="40" ry="18" class="bg-entry" />
-    <text x="380" y="24" class="box-desc">Administrator</text>
-    <text x="380" y="50" class="box-desc" fill="#888">Command line</text>
+    <ellipse cx="440" cy="28" rx="48" ry="20" class="bg-entry" />
+    <text x="440" y="24" class="box-desc">Administrator</text>
+    <text x="440" y="38" class="box-desc" fill="#888">CLI / PyPI</text>
+    <text x="440" y="62" class="box-desc" fill="#888">weatherender</text>
   </g>
 
-  <!-- Main Shared Modules & Business Logic -->
-  <rect x="370" y="110" width="600" height="520" class="node-container" />
-  <text x="670" y="135" class="box-title">Shared modules &amp; business logic</text>
+  <!-- Shared modules -->
+  <rect x="350" y="115" width="620" height="520" class="node-container" />
+  <text x="660" y="140" class="box-title">src/weatherender/ — package & business logic</text>
 
   <!-- Entrypoints -->
-  <rect x="390" y="155" width="105" height="35" rx="6" class="bg-blue" />
-  <text x="442" y="177" class="box-desc">WEB / app.py</text>
+  <rect x="365" y="160" width="130" height="40" rx="6" class="bg-blue" />
+  <text x="430" y="177" class="box-desc">WEB/app.py</text>
+  <text x="430" y="192" class="box-desc" fill="#a0a0a0">Flask :5001</text>
 
-  <rect x="505" y="155" width="115" height="35" rx="6" class="bg-blue" />
-  <text x="562" y="177" class="box-desc">api_routes.py (/api)</text>
+  <rect x="505" y="160" width="125" height="40" rx="6" class="bg-blue" />
+  <text x="567" y="177" class="box-desc">WEB/api_routes.py</text>
+  <text x="567" y="192" class="box-desc" fill="#a0a0a0">sync /api</text>
 
-  <rect x="630" y="155" width="115" height="35" rx="6" class="bg-darkgreen" />
-  <text x="687" y="177" class="box-desc">API / main.py (v2)</text>
+  <rect x="640" y="160" width="145" height="40" rx="6" class="bg-darkgreen" />
+  <text x="712" y="177" class="box-desc">API/main.py</text>
+  <text x="712" y="192" class="box-desc" fill="#a0a0a0">v2 + mounted Flask :8001</text>
 
-  <rect x="755" y="155" width="95" height="35" rx="6" class="bg-blue" />
-  <text x="802" y="177" class="box-desc">CLI / main.py</text>
+  <rect x="795" y="160" width="155" height="40" rx="6" class="bg-blue" />
+  <text x="872" y="177" class="box-desc">CLI/main.py</text>
+  <text x="872" y="192" class="box-desc" fill="#a0a0a0">pip: weatherender</text>
 
-  <!-- Endpoints Row -->
-  <rect x="520" y="205" width="55" height="25" rx="4" class="bg-purple" />
-  <text x="547" y="221" class="box-desc" font-size="10">/apidocs</text>
+  <!-- Endpoints -->
+  <rect x="505" y="215" width="55" height="24" rx="4" class="bg-purple" />
+  <text x="532" y="231" class="box-desc" font-size="10">/apidocs</text>
 
-  <rect x="580" y="205" width="45" height="25" rx="4" class="bg-purple" />
-  <text x="602" y="221" class="box-desc" font-size="10">/health</text>
+  <rect x="565" y="215" width="48" height="24" rx="4" class="bg-purple" />
+  <text x="589" y="231" class="box-desc" font-size="10">/health</text>
 
-  <rect x="630" y="205" width="50" height="25" rx="4" class="bg-purple" />
-  <text x="655" y="221" class="box-desc" font-size="10">/metrics</text>
+  <rect x="618" y="215" width="52" height="24" rx="4" class="bg-purple" />
+  <text x="644" y="231" class="box-desc" font-size="10">/metrics</text>
 
-  <rect x="685" y="205" width="65" height="25" rx="4" class="bg-darkgreen" />
-  <text x="717" y="221" class="box-desc" font-size="10">/api/v2/health</text>
+  <rect x="678" y="215" width="78" height="24" rx="4" class="bg-darkgreen" />
+  <text x="717" y="231" class="box-desc" font-size="10">/api/v2/health</text>
 
-  <rect x="755" y="205" width="75" height="25" rx="4" class="bg-darkgreen" />
-  <text x="792" y="221" class="box-desc" font-size="10">/api/v2/weather</text>
+  <rect x="762" y="215" width="85" height="24" rx="4" class="bg-darkgreen" />
+  <text x="804" y="231" class="box-desc" font-size="10">/api/v2/weather</text>
 
-  <!-- Connectors from Entry to Endpoints -->
-  <path d="M 562 190 L 547 205" class="edge" />
-  <path d="M 562 190 L 602 205" class="edge" />
-  <path d="M 562 190 L 655 205" class="edge" />
-  <path d="M 687 190 L 717 205" class="edge" />
-  <path d="M 687 190 L 792 205" class="edge" />
+  <path d="M 567 200 L 532 215" class="edge" />
+  <path d="M 567 200 L 589 215" class="edge" />
+  <path d="M 567 200 L 644 215" class="edge" />
+  <path d="M 712 200 L 717 215" class="edge" />
+  <path d="M 712 200 L 804 215" class="edge" />
 
-  <!-- Schemas & Config Row -->
-  <rect x="390" y="255" width="140" height="50" rx="6" class="bg-purple" />
-  <text x="460" y="275" class="box-desc" font-weight="bold">models.py:</text>
-  <text x="460" y="292" class="box-desc">SQLAlchemy ORM</text>
+  <!-- Schemas -->
+  <rect x="365" y="260" width="145" height="50" rx="6" class="bg-purple" />
+  <text x="437" y="280" class="box-desc" font-weight="bold">models.py</text>
+  <text x="437" y="296" class="box-desc">SQLAlchemy ORM</text>
 
-  <rect x="540" y="255" width="140" height="50" rx="6" class="bg-purple" />
-  <text x="610" y="275" class="box-desc" font-weight="bold">schemas.py:</text>
-  <text x="610" y="292" class="box-desc">Marshmallow (WEB/CLI)</text>
+  <rect x="520" y="260" width="145" height="50" rx="6" class="bg-purple" />
+  <text x="592" y="280" class="box-desc" font-weight="bold">schemas.py</text>
+  <text x="592" y="296" class="box-desc">Marshmallow (WEB/CLI)</text>
 
-  <rect x="690" y="255" width="140" height="50" rx="6" class="bg-darkgreen" />
-  <text x="760" y="275" class="box-desc" font-weight="bold">pydantic_schemas.py:</text>
-  <text x="760" y="292" class="box-desc">Pydantic v2 (API/ only)</text>
+  <rect x="675" y="260" width="150" height="50" rx="6" class="bg-darkgreen" />
+  <text x="750" y="280" class="box-desc" font-weight="bold">pydantic_schemas.py</text>
+  <text x="750" y="296" class="box-desc">Pydantic v2 (API/)</text>
 
-  <rect x="840" y="255" width="115" height="50" rx="6" class="bg-purple" />
-  <text x="897" y="275" class="box-desc" font-weight="bold">logging_config.py</text>
-  <text x="897" y="292" class="box-desc">JSON logs</text>
+  <rect x="835" y="260" width="115" height="50" rx="6" class="bg-purple" />
+  <text x="892" y="280" class="box-desc" font-weight="bold">logging_config.py</text>
+  <text x="892" y="296" class="box-desc">package-level JSON logs</text>
 
-  <!-- Services & Logic Row -->
-  <rect x="390" y="335" width="190" height="55" rx="6" class="bg-orange" />
-  <text x="485" y="357" class="box-desc" font-weight="bold">services.py: Weather,</text>
-  <text x="485" y="374" class="box-desc">geolocation &amp; rate limiting</text>
+  <!-- Sync services -->
+  <rect x="365" y="335" width="200" height="55" rx="6" class="bg-orange" />
+  <text x="465" y="357" class="box-desc" font-weight="bold">services.py: Weather,</text>
+  <text x="465" y="374" class="box-desc">geolocation & rate limiting</text>
 
-  <rect x="610" y="335" width="150" height="55" rx="6" class="bg-orange" />
-  <text x="685" y="357" class="box-desc" font-weight="bold">cache.py: Redis</text>
-  <text x="685" y="374" class="box-desc">TTL cache, fallback</text>
+  <rect x="580" y="335" width="160" height="55" rx="6" class="bg-orange" />
+  <text x="660" y="357" class="box-desc" font-weight="bold">cache.py: Redis</text>
+  <text x="660" y="374" class="box-desc">TTL cache, fallback</text>
 
-  <rect x="790" y="335" width="165" height="55" rx="6" class="bg-orange" />
-  <text x="872" y="357" class="box-desc" font-weight="bold">Talisman / Prometheus</text>
-  <text x="872" y="374" class="box-desc">security &amp; metrics</text>
+  <rect x="755" y="335" width="195" height="55" rx="6" class="bg-orange" />
+  <text x="852" y="357" class="box-desc" font-weight="bold">Talisman / Prometheus</text>
+  <text x="852" y="374" class="box-desc">security & metrics (Flask)</text>
 
-  <path d="M 580 362 L 608 362" class="edge" />
-  <text x="595" y="355" class="box-desc" font-size="9">get/set</text>
+  <path d="M 565 362 L 578 362" class="edge" />
 
-  <!-- Async Layer -->
-  <rect x="390" y="420" width="200" height="50" rx="6" class="bg-darkgreen" />
-  <text x="490" y="440" class="box-desc" font-weight="bold">async_services.py: httpx.AsyncClient</text>
-  <text x="490" y="456" class="box-desc">mirror of services.py (API/)</text>
+  <!-- Async layer -->
+  <rect x="365" y="420" width="210" height="50" rx="6" class="bg-darkgreen" />
+  <text x="470" y="440" class="box-desc" font-weight="bold">async_services.py: httpx</text>
+  <text x="470" y="456" class="box-desc">mirror of services.py (API/)</text>
 
-  <rect x="605" y="420" width="160" height="50" rx="6" class="bg-darkgreen" />
-  <text x="685" y="440" class="box-desc" font-weight="bold">async_cache.py / SlowAPI</text>
-  <text x="685" y="456" class="box-desc">redis.asyncio &amp; 25 req/min</text>
+  <rect x="590" y="420" width="175" height="50" rx="6" class="bg-darkgreen" />
+  <text x="677" y="440" class="box-desc" font-weight="bold">async_cache.py / SlowAPI</text>
+  <text x="677" y="456" class="box-desc">redis.asyncio & 25 req/min</text>
 
-  <rect x="780" y="420" width="175" height="50" rx="6" class="bg-darkgreen" />
-  <text x="867" y="440" class="box-desc" font-weight="bold">async_db.py: asyncpg</text>
-  <text x="867" y="456" class="box-desc">create_async_engine</text>
+  <rect x="780" y="420" width="170" height="50" rx="6" class="bg-darkgreen" />
+  <text x="865" y="440" class="box-desc" font-weight="bold">async_db.py: asyncpg</text>
+  <text x="865" y="456" class="box-desc">create_async_engine</text>
 
-  <!-- Connectors within Business Logic -->
-  <path d="M 460 305 L 460 335" class="edge" />
-  <path d="M 610 305 L 610 335" class="edge" />
-  <path d="M 760 305 L 760 420" class="edge" />
+  <path d="M 437 310 L 437 335" class="edge" />
+  <path d="M 592 310 L 592 335" class="edge" />
+  <path d="M 750 310 L 750 420" class="edge" />
+  <path d="M 465 390 L 465 420" class="edge" />
+  <path d="M 660 390 L 660 420" class="edge" />
 
-  <path d="M 485 390 L 485 420" class="edge" />
-  <path d="M 685 390 L 685 420" class="edge" />
+  <!-- External -->
+  <rect x="365" y="505" width="120" height="40" rx="6" class="bg-gray" />
+  <text x="425" y="530" class="box-desc" font-weight="bold">WeatherAPI.com</text>
 
-  <!-- DB Connection line to Data Management -->
-  <path d="M 390 280 L 252 500" class="edge" />
+  <rect x="500" y="505" width="140" height="40" rx="6" class="bg-gray" />
+  <text x="570" y="530" class="box-desc" font-weight="bold">ip-api.com / ipinfo.io</text>
 
-  <!-- External Services Row -->
-  <rect x="390" y="500" width="110" height="40" rx="6" class="bg-gray" />
-  <text x="445" y="525" class="box-desc" font-weight="bold">WeatherAPI.com</text>
+  <rect x="655" y="505" width="115" height="40" rx="6" class="bg-pink" />
+  <text x="712" y="530" class="box-desc" font-weight="bold">Redis: TTL store</text>
 
-  <rect x="510" y="500" width="130" height="40" rx="6" class="bg-gray" />
-  <text x="575" y="525" class="box-desc" font-weight="bold">ip-api.com / ipinfo.io</text>
+  <rect x="785" y="505" width="165" height="40" rx="6" class="bg-gray" />
+  <text x="867" y="522" class="box-desc" font-weight="bold">PyPI weatherender</text>
+  <text x="867" y="537" class="box-desc">GHCR weatherender-api</text>
 
-  <rect x="650" y="500" width="110" height="40" rx="6" class="bg-pink" />
-  <text x="705" y="525" class="box-desc" font-weight="bold">Redis: TTL store</text>
+  <path d="M 425 470 L 425 505" class="edge" />
+  <path d="M 500 470 L 560 505" class="edge" />
+  <path d="M 677 470 L 712 505" class="edge" />
 
-  <path d="M 445 470 L 445 500" class="edge" />
-  <path d="M 520 470 L 565 500" class="edge" />
-  <path d="M 685 470 L 705 500" class="edge" />
+  <path d="M 350 285 L 252 510" class="edge" />
 
-  <!-- Top Clients to Logic Connectors -->
-  <path d="M 460 70 L 442 155" class="edge" />
-  <path d="M 570 70 L 562 155" class="edge" />
-  <path d="M 690 70 L 687 155" class="edge" />
-  <path d="M 800 70 L 802 155" class="edge" />
+  <!-- Client arrows -->
+  <path d="M 415 85 L 430 160" class="edge" />
+  <path d="M 535 85 L 567 160" class="edge" />
+  <path d="M 670 85 L 712 160" class="edge" />
+  <path d="M 800 85 L 872 160" class="edge" />
 
-  <!-- Render Deployment Container (Bottom Block) -->
-  <rect x="70" y="670" width="860" height="180" class="node-container" style="stroke: #16a085; fill: #0d1f1c;" />
-  <text x="500" y="698" class="box-title" fill="#16a085">Render deployment — single image, single uvicorn process</text>
+  <!-- Render / GHCR block -->
+  <rect x="70" y="680" width="860" height="210" class="node-container" style="stroke: #16a085; fill: #0d1f1c;" />
+  <text x="500" y="708" class="box-title" fill="#16a085">Production = local :8001  —  one uvicorn, Flask mounted inside FastAPI</text>
 
-  <rect x="100" y="720" width="220" height="75" rx="8" class="bg-darkgreen" />
-  <text x="210" y="748" class="box-desc" font-weight="bold">API/Dockerfile</text>
-  <text x="210" y="765" class="box-desc">uvicorn API.main:app</text>
-  <text x="210" y="780" class="box-desc" fill="#a0a0a0">(sole Render deploy target)</text>
+  <rect x="95" y="730" width="250" height="130" rx="8" class="bg-darkgreen" />
+  <text x="220" y="755" class="box-desc" font-weight="bold">src/weatherender/API/Dockerfile</text>
+  <text x="220" y="775" class="box-desc">uvicorn weatherender.API.main:app</text>
+  <text x="220" y="793" class="box-desc">GHCR: weatherender-api</text>
+  <text x="220" y="811" class="box-desc" fill="#a0a0a0">Render sole deploy target</text>
+  <text x="220" y="829" class="box-desc" fill="#a0a0a0">health: /api/v2/health</text>
+  <text x="220" y="847" class="box-desc" fill="#a0a0a0">PORT from env (default 8001)</text>
 
-  <rect x="360" y="720" width="230" height="75" rx="8" class="bg-blue" />
-  <text x="475" y="743" class="box-desc" font-weight="bold">WEB/app.py (Flask)</text>
-  <text x="475" y="760" class="box-desc">via fastapi.middleware.wsgi</text>
-  <text x="475" y="777" class="box-desc">.WSGIMiddleware, mounted at "/"</text>
+  <rect x="380" y="730" width="250" height="130" rx="8" class="bg-blue" />
+  <text x="505" y="755" class="box-desc" font-weight="bold">weatherender.WEB.app</text>
+  <text x="505" y="775" class="box-desc">mounted at "/" via</text>
+  <text x="505" y="793" class="box-desc">a2wsgi.WSGIMiddleware</text>
+  <text x="505" y="811" class="box-desc">UI + /api/weather + /health</text>
+  <text x="505" y="829" class="box-desc">+ /metrics + /apidocs</text>
+  <text x="505" y="847" class="box-desc" fill="#a0a0a0">same Flask as :5001</text>
 
-  <path d="M 320 757 L 358 757" class="edge" />
-  <text x="339" y="750" class="box-desc" font-size="10">mounts</text>
+  <path d="M 345 795 L 378 795" class="edge" />
+  <text x="361" y="785" class="box-desc" font-size="10">mounts</text>
 
-  <text x="730" y="750" class="box-desc" text-anchor="start" fill="#cccccc">Local dev: WEB/ and API/</text>
-  <text x="730" y="768" class="box-desc" text-anchor="start" fill="#cccccc">still run as two separate</text>
-  <text x="730" y="786" class="box-desc" text-anchor="start" fill="#cccccc">docker-compose containers</text>
-
+  <text x="665" y="760" class="box-desc" text-anchor="start" fill="#cccccc">Local Compose (two processes):</text>
+  <text x="665" y="782" class="box-desc" text-anchor="start" fill="#cccccc">:5001  web  — Flask only</text>
+  <text x="665" y="800" class="box-desc" text-anchor="start" fill="#cccccc">         Gunicorn + gevent</text>
+  <text x="665" y="822" class="box-desc" text-anchor="start" fill="#cccccc">:8001  api  — FastAPI + Flask</text>
+  <text x="665" y="840" class="box-desc" text-anchor="start" fill="#cccccc">         production-shaped</text>
+  <text x="665" y="858" class="box-desc" text-anchor="start" fill="#cccccc">v2 routes do not exist on :5001</text>
 </svg>
