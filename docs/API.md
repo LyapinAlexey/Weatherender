@@ -1,18 +1,29 @@
 # API Reference
 
 Weatherender exposes a dual-stack JSON REST API alongside its server-rendered web UI:
+
 - **FastAPI (v2 Async API):** Interactive Swagger UI is available at `/v2/docs` (or ReDoc at `/v2/redoc`).
 - **Flask (v1 Sync API):** Interactive Swagger UI (OpenAPI 3.0) is available at `/apidocs`.
 
 Base URL (production): `https://weather-7icc.onrender.com`
+
+Local (Docker Compose):
+
+| Host | Process | What it serves |
+| --- | --- | --- |
+| `http://localhost:5001` | `web` — Gunicorn + Flask only | HTML UI, sync v1 API (`/api/weather`), `/health`, `/metrics`, `/apidocs`, `/api/ping`. **No** FastAPI v2. |
+| `http://localhost:8001` | `api` — Uvicorn + FastAPI, Flask mounted via `WSGIMiddleware` | Async v2 (`/api/v2/*`, `/v2/docs`) **and** the full Flask stack above. This is the production-shaped process. |
+
+On Render there is a single `$PORT`; it behaves like `:8001`.
+
 
 ---
 
 ## Endpoints
 
 | Endpoint | Method | Engine | Auth | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `/api/v2/weather` | `GET` | FastAPI | None | High-performance Async API v2 with Pydantic v2 validation |
+| --- | --- | --- | --- | --- |
+| `/api/v2/weather` | `GET` | FastAPI | None | High-performance async API v2 with Pydantic v2 validation |
 | `/api/v2/health` | `GET` | FastAPI | None | Async DB health check (`AsyncSessionLocal`) |
 | `/v2/docs` | `GET` | FastAPI | None | Interactive FastAPI OpenAPI/Swagger documentation |
 | `/v2/redoc` | `GET` | FastAPI | None | Alternative FastAPI ReDoc documentation |
@@ -28,23 +39,33 @@ Base URL (production): `https://weather-7icc.onrender.com`
 
 ### `GET /api/v2/weather`
 
-High-performance asynchronous endpoint powered by **FastAPI**, **Pydantic v2**, and `httpx`.
+High-performance asynchronous endpoint powered by **FastAPI**, **Pydantic v2**, and `httpx`. Implemented in `src/weatherender/API/main.py`.
 
 **Query parameters**
 
 | Param | Type | Required | Notes |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `city` | string | yes | 1–100 characters, validated via Pydantic v2 (`Annotated[WeatherQueryParams, Query()]`). Strips whitespace and rejects blank/whitespace-only input. |
 
 **Example**
+
 ```bash
 curl "https://weather-7icc.onrender.com/api/v2/weather?city=Berlin"
 ```
 
+Local (v2 lives only on the API process):
+
+```bash
+curl "http://localhost:8001/api/v2/weather?city=Berlin"
+```
+
+This will **not** work on `:5001`.
+
+
 **Responses**
 
 | Status | Meaning |
-| :--- | :--- |
+| --- | --- |
 | `200` | Success — weather payload returned asynchronously |
 | `422` | Unprocessable Entity — missing, empty, or invalid `city` parameter |
 | `404` | City not found by the upstream weather provider |
@@ -59,9 +80,9 @@ API v2 uses a hybrid Pydantic v2 response model (`WeatherResponseV2`). External 
 
 ```json
 {
-  "location": { ... },
-  "current": { ... },
-  "forecast": { ... },
+  "location": { },
+  "current": { },
+  "forecast": { },
   "snow_state": {
     "status": "Powder / Excellent Snow"
   },
@@ -83,7 +104,7 @@ API v2 uses a hybrid Pydantic v2 response model (`WeatherResponseV2`). External 
 Async readiness probe used to verify database connectivity for FastAPI routes via `AsyncSessionLocal` (`SELECT 1`).
 
 | Status | Body |
-| :--- | :--- |
+| --- | --- |
 | `200` | `{"status": "ok"}` |
 | `503` | `{"status": "error", "detail": "503 Service Unavailable"}` |
 
@@ -91,23 +112,32 @@ Async readiness probe used to verify database connectivity for FastAPI routes vi
 
 ### `GET /api/weather`
 
-Returns current conditions and a 3-day forecast for a given city via the legacy synchronous **Flask** pipeline.
+Returns current conditions and a 3-day forecast for a given city via the legacy synchronous **Flask** pipeline (`src/weatherender/WEB/api_routes.py`).
 
 **Query parameters**
 
 | Param | Type | Required | Notes |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `city` | string | yes | 1–100 characters, validated via a Marshmallow schema |
 
 **Example**
+
 ```bash
 curl "https://weather-7icc.onrender.com/api/weather?city=Berlin"
 ```
 
+Local (Flask-only container **or** the combined API process):
+
+```bash
+curl "http://localhost:5001/api/weather?city=Berlin"
+curl "http://localhost:8001/api/weather?city=Berlin"
+```
+
+
 **Responses**
 
 | Status | Meaning |
-| :--- | :--- |
+| --- | --- |
 | `200` | Success — weather payload returned |
 | `400` | Missing or invalid `city` parameter |
 | `404` | City not found by the upstream weather provider, or an upstream error occurred |
@@ -123,18 +153,18 @@ Rate limited to 25 requests/minute per IP per worker via `flask-limiter`. See [R
 Synchronous readiness probe used by Docker Compose (`depends_on: condition: service_healthy`) and external monitors. Executes `SELECT 1` against the database via SQLAlchemy sync session.
 
 | Status | Body |
-| :--- | :--- |
+| --- | --- |
 | `200` | `{"status": "ok"}` |
 | `503` | `{"status": "error", "detail": "503 Service Unavailable"}` |
 
 ---
 
-### `GET / HEAD /api/ping`
+### `GET` / `HEAD` `/api/ping`
 
-A minimal liveness endpoint (defined in `api_routes.py` under the `api_bp` blueprint) that does **not** open a database session. Exists specifically so external monitors (UptimeRobot) can keep the Render instance warm without consuming Supabase's limited free-tier connection pool. Accepts `HEAD` requests and bypasses `User-Agent` verification checks.
+A minimal liveness endpoint (defined in `src/weatherender/WEB/api_routes.py` under the `api_bp` blueprint) that does **not** open a database session. Exists specifically so external monitors (UptimeRobot) can keep the Render instance warm without consuming Supabase's limited free-tier connection pool. Accepts `HEAD` requests and bypasses `User-Agent` verification checks.
 
 | Status | Body |
-| :--- | :--- |
+| --- | --- |
 | `200` | `{"status": "ok"}` |
 
 ---
@@ -156,7 +186,7 @@ Returns the raw OpenAPI 3.0 spec generated by `apispec` for Flask v1 routes, whi
 - **v1 API (`/api/weather`)**: Limiting is handled via `flask-limiter`.
 - **v2 API (`/api/v2/weather`)**: Limiting is handled via `slowapi` (`Limiter(key_func=get_remote_address)`). Enforces **25 requests per minute per IP** on the weather endpoint only (`/api/v2/health` is unthrottled).
 
-> **Note on Multi-Worker Architecture:**
+> **Note on multi-worker architecture:**
 > Rate limiting for both engines uses in-memory tracking per process. When running in multi-worker configurations (e.g. `uvicorn --workers 4`), each worker maintains its own isolated counter. As a result, requests distributed across workers yield an effective client limit of up to `limit × workers` (~100 requests/min total for 4 workers) rather than a strict global 25.
 
 Health checks (`/health`, `/api/ping`, `/api/v2/health`) and documentation endpoints (`/v2/docs`, `/v2/redoc`, `/apidocs`) explicitly bypass rate limiting.
@@ -170,7 +200,9 @@ Where a limit applies, exceeding it returns `429 Too Many Requests`.
 Error response formats depend on the endpoint engine:
 
 ### 1. FastAPI v2 Validation Errors (`422 Unprocessable Entity`)
+
 Follows standard FastAPI/Pydantic v2 JSON structure:
+
 ```json
 {
   "detail": [
@@ -178,14 +210,16 @@ Follows standard FastAPI/Pydantic v2 JSON structure:
       "type": "value_error",
       "loc": ["query", "city"],
       "msg": "Value error, city must not be blank or whitespace-only",
-      "input": "   "
+      "input": " "
     }
   ]
 }
 ```
 
 ### 2. Flask v1 Validation Errors (`400 Bad Request`)
+
 Marshmallow validation returns a field-keyed structure:
+
 ```json
 {
   "error": {
@@ -195,7 +229,9 @@ Marshmallow validation returns a field-keyed structure:
 ```
 
 ### 3. Upstream / Business Errors (`404 Not Found`)
+
 Returned when a city is not found by WeatherAPI:
+
 ```json
 {
   "error": {
@@ -205,7 +241,9 @@ Returned when a city is not found by WeatherAPI:
 ```
 
 ### 4. Rate Limit Exceeded (`429 Too Many Requests`)
+
 Returned by `slowapi` on `/api/v2/weather` when a client exceeds the per-minute request limit.
+
 ```json
 {
   "error": "Rate limit exceeded: 25 per 1 minute"
@@ -217,6 +255,7 @@ Returned by `slowapi` on `/api/v2/weather` when a client exceeds the per-minute 
 ## Resilience & Retries (Tenacity)
 
 Both engines incorporate automatic exponential backoff retries via `tenacity` for resilience against upstream WeatherAPI network timeouts and transient errors:
+
 - **v1 Flask (Sync):** Uses synchronous `@retry` logic wrapping upstream `requests` calls with exponential backoff.
 - **v2 FastAPI (Async):** Uses asynchronous `@retry` logic wrapping `httpx.AsyncClient` calls without blocking the async event loop.
 
@@ -225,5 +264,6 @@ Both engines incorporate automatic exponential backoff retries via `tenacity` fo
 ## Interactive Docs
 
 Try live API calls and inspect schemas via:
-* **FastAPI v2 Swagger UI:** [weather-7icc.onrender.com/v2/docs](https://weather-7icc.onrender.com/v2/docs)
-* **Flask v1 Swagger UI:** [weather-7icc.onrender.com/apidocs](https://weather-7icc.onrender.com/apidocs)
+
+- **FastAPI v2 Swagger UI:** [weather-7icc.onrender.com/v2/docs](https://weather-7icc.onrender.com/v2/docs)
+- **Flask v1 Swagger UI:** [weather-7icc.onrender.com/apidocs](https://weather-7icc.onrender.com/apidocs)
