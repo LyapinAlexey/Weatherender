@@ -9,10 +9,11 @@ Production-grade weather application with a Flask web interface, a CLI tool, and
 [![PyPI](https://img.shields.io/pypi/v/weatherender)](https://pypi.org/project/weatherender/)
 [![GHCR](https://img.shields.io/badge/GHCR-weatherender--api-blue)](https://github.com/Weatherender-foundation/Weatherender/pkgs/container/weatherender-api)
 [![Codecov](https://codecov.io/github/Weatherender-foundation/Weatherender/graph/badge.svg?token=VIAZVWQ81B)](https://codecov.io/github/Weatherender-foundation/Weatherender)
-![License](https://img.shields.io/badge/SSCI-Custom_License-green)
+<br/>
 ![Python](https://img.shields.io/badge/python-3.13-blue?logo=python&logoColor=306998)
 ![Flask](https://img.shields.io/badge/Flask-Framework-000000?logo=flask&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/SSCI-Custom_License-green)
 
 ## Live Demo
 
@@ -89,33 +90,40 @@ For the full local stack (web + api + postgres + redis) use Docker Compose below
 > Prefer not to run it locally? Try the [live demo](https://weather-7icc.onrender.com) above.
 
 1. Clone the repo and copy the environment template:
+
 ```bash
 git clone https://github.com/Weatherender-foundation/Weatherender.git
 cd Weatherender
 cp .env.example .env
 ```
+
 2. Fill in `.env` — at minimum you'll need a free API key from [weatherapi.com](https://www.weatherapi.com/) (`WEATHER_API_KEY`) and a `SECRET_KEY`:
+
 ```bash
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 3. Start the stack:
+
 ```bash
 docker compose up -d
 docker compose run --rm cli alembic upgrade head
 ```
 
-4. Open [http://localhost:5001](http://localhost:5001) (Flask web UI). FastAPI v2 is on [http://localhost:8001/v2/docs](http://localhost:8001/v2/docs).
+4. Open [http://localhost:5001](http://localhost:5001) for the Flask-only process (UI + sync API).
+
+   Open [http://localhost:8001](http://localhost:8001) for the combined process: FastAPI v2 **and** the same Flask app mounted via `WSGIMiddleware` (this is what production runs). Docs: [http://localhost:8001/v2/docs](http://localhost:8001/v2/docs).
 
 Local ports (from `.env.example`):
 
-| Service | Host port |
-| --- | --- |
-| Flask web | `5001` |
-| FastAPI v2 | `8001` |
-| PostgreSQL | `5432` |
-| Redis | `6379` |
-| Test PostgreSQL | `5433` |
+| Service | Host port | Serves |
+| --- | --- | --- |
+| `web` | `5001` | Gunicorn + Flask only (UI, `/api/weather`, `/health`, `/apidocs`) |
+| `api` | `8001` | Uvicorn + FastAPI + Flask mounted (v2 **and** v1/UI) |
+| PostgreSQL | `5432` | — |
+| Redis | `6379` | — |
+| Test PostgreSQL | `5433` | — |
+
 
 ## Running the CLI
 
@@ -171,19 +179,26 @@ The application has been load, stress, and spike tested with [k6](https://k6.io/
 k6 must be installed locally (it isn't bundled as a Docker Compose service). Smoke and load tests target the live Render deployment directly; stress and spike tests require the local stack running first.
 
 #### 1. Smoke Test (Render — verify the live deployment is alive and stable)
+
 ```bash
 k6 run load_tests/smoke.js
 ```
+
 #### 2. Load Test (Render — realistic traffic across all endpoints)
+
 ```bash
 k6 run load_tests/load.js
 ```
+
 #### 3. Stress Test (local — find the system's breaking point) — [running locally](#quick-start-docker)
+
 ```bash
 docker compose up -d
 k6 run load_tests/stress.js
 ```
+
 #### 4. Spike Test (local — validate resilience against sudden traffic bursts) — [running locally](#quick-start-docker)
+
 ```bash
 docker compose up -d
 k6 run load_tests/spike.js
@@ -206,10 +221,13 @@ docker compose up -d weather_test_db
 DATABASE_URL="postgresql://test_user:test_password@localhost:5433/test_weather_db" alembic upgrade head
 pytest -v
 ```
+
 Via Compose (same path as CI):
+
 ```bash
 docker compose run --rm -v "$PWD":/app cli pytest tests/ --cov=. --cov-report=xml --asyncio-mode=auto
 ```
+
 Note: `test_cache.py` mocks the Redis client directly and does not require a running Redis instance.
 
 ## Engineering Standards & Git Flow
@@ -233,14 +251,15 @@ The next major architectural evolution of **Weatherender** is fully planned:
 
 ## Project Structure & Architecture
 
-The installable package and full project's code lives under `src/weatherender/`:
+The installable package lives under `src/weatherender/`:
 
 ```text
 src/weatherender/
-├── WEB/          # Flask UI + v1 JSON API (local Compose port 5001)
-├── API/          # FastAPI v2 — Render / GHCR image (local Compose port 8001)
+├── WEB/          # Flask UI + v1 JSON API (Compose `web`, port 5001 — Flask only)
+├── API/          # FastAPI v2 + mounted Flask (Compose `api` / Render / GHCR, port 8001)
+
 ├── CLI/          # console script: weatherender
-├── config.py     # Over modules
+├── config.py
 ├── models.py
 ├── services.py
 ├── cache.py
@@ -248,7 +267,8 @@ src/weatherender/
 └── snow.py
 ```
 
-Locally, Compose runs `web` and `api` as separate containers. In production, one uvicorn process from `src/weatherender/API/Dockerfile` mounts Flask via `WSGIMiddleware`.
+Locally, Compose runs `web` (port **5001**, Flask only) and `api` (port **8001**, FastAPI + Flask via `WSGIMiddleware`) as separate containers. Production and GHCR use only the API image, so one uvicorn process serves both stacks — the same shape as local `:8001`.
+
 
 Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 

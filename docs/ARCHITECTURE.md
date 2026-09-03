@@ -18,7 +18,8 @@ The installable Python package lives under `src/weatherender/` (`pip install wea
 - **Resilience & Fallback:** Automatic IP geolocation failover chain and graceful degradation when Redis caching is offline.
 - **Production Performance:** Flask served via Gunicorn utilizing `gevent` workers, with `psycogreen` patching `psycopg2` for non-blocking PostgreSQL network I/O.
 - **Data Maintenance:** Deterministic periodic DB cleanup via APScheduler, guarded by a lock-file leader-election pattern to avoid duplicate execution across Gunicorn workers.
-- **Single-Image Deployment:** Render (and GHCR) use a single `uvicorn` process from `src/weatherender/API/Dockerfile` that mounts the synchronous Flask app inside the async FastAPI app via `WSGIMiddleware`, while local development keeps both stacks as independent Docker Compose containers.
+- **Single-Image Deployment:** Render (and GHCR) use a single `uvicorn` process from `src/weatherender/API/Dockerfile` that mounts the synchronous Flask app inside the async FastAPI app via `WSGIMiddleware`. Locally Compose still runs two containers: `web` on **5001** (Flask only) and `api` on **8001** (FastAPI + the same Flask app mounted). Production matches the `api` container, not `web`.
+
 
 ---
 
@@ -51,14 +52,16 @@ Weatherender/
 │   │   ├── scheduler.py              # APScheduler DB cleanup with lock-file leader election
 │   │   ├── swagger_config.py         # OpenAPI 3.0 + Swagger UI
 │   │   ├── logging_config.py         # structured JSON logging
-│   │   └── Dockerfile                # local Flask container (port 5001)
-│   ├── API/                          # FastAPI v2 — sole Render / GHCR image
+│   │   └── Dockerfile                # local Flask-only container (port 5001)
+│   ├── API/                          # FastAPI v2 + mounted Flask — sole Render / GHCR image
+
 │   │   ├── main.py                   # ASGI entry; mounts WEB.app via WSGIMiddleware
 │   │   ├── async_services.py         # httpx.AsyncClient mirror of WeatherService
 │   │   ├── async_cache.py            # redis.asyncio singleton cache
 │   │   ├── async_db.py               # create_async_engine / AsyncSessionLocal (asyncpg)
 │   │   ├── pydantic_schemas.py       # Pydantic v2 query + response models
-│   │   └── Dockerfile                # GHCR + Render image (port 8001)
+│   │   └── Dockerfile                # GHCR + Render image (port 8001: Flask + FastAPI)
+
 │   ├── CLI/
 │   │   ├── main.py                   # console script: weatherender
 │   │   └── Dockerfile
@@ -69,8 +72,8 @@ Weatherender/
 │   ├── dbclear.py                    # purge WeatherRequest rows older than 30 days
 │   ├── schemas.py                    # Marshmallow validation
 │   └── snow.py                       # SSCI snow-surface algorithm
-├── tests/                            # Pytest and unit tests (mocked and real DB integration)
-├── load_tests/                       # Grafana k6 load-test scripts (smoke, load, stress, spike)
+├── tests/
+├── load_tests/
 ├── docs/
 │   ├── PERFORMANCE.md
 │   ├── DEPLOYMENT.md
@@ -79,11 +82,11 @@ Weatherender/
 │   ├── ARCHITECTURE.md
 │   └── architecture.svg
 ├── alembic/
-├── scripts/                          # Shell scripts for local dev, testing, and CI/CD
-├── pyproject.toml                    # Poetry-managed project metadata, dependencies, and console script entrypoint
+├── scripts/
+├── pyproject.toml
 ├── docker-compose.yml
 └── .github/workflows/
-    ├── ci.yml                        # CI/CD
+    ├── ci.yml
     └── publish-github.yml            # build & push GHCR image
 ```
 
@@ -251,13 +254,19 @@ Client (async API consumer)
    - **GitHub Actions** (`ci.yml`) enforces code quality checks (Ruff, Mypy) and executes the full `pytest` suite before triggering deploy webhooks to production.
    - **`publish-github.yml`** builds `src/weatherender/API/Dockerfile` and pushes `ghcr.io/weatherender-foundation/weatherender-api:{latest,$SHA}` on every push to `main`.
 5. **Single-Image Production Deployment:**
-   Render deploys only the image from `src/weatherender/API/Dockerfile` — it mounts `weatherender.WEB.app` internally via `WSGIMiddleware`, so one `uvicorn` process serves both the async v2 API and the full legacy Flask stack (UI, v1 API, `/health`, `/metrics`, `/apidocs`). Locally, `docker-compose` still runs `WEB/` and `API/` as two independent containers (ports **5001** and **8001**) for development and testing.
+   Render deploys only the image from `src/weatherender/API/Dockerfile` — it mounts `weatherender.WEB.app` internally via `WSGIMiddleware`, so one `uvicorn` process serves both the async v2 API and the full legacy Flask stack (UI, v1 API, `/health`, `/metrics`, `/apidocs`).
+
+   Locally, Compose runs two containers:
+   - `web` on **5001** — Gunicorn + Flask only (UI + sync API). No `/api/v2`.
+   - `api` on **8001** — Uvicorn + FastAPI with Flask mounted. Async v2 **and** the full Flask stack. This is what production looks like.
+
 
 ---
 
 ## 7. Local vs production process model
 
-| Environment | Processes | Ports |
-| --- | --- | --- |
-| Local Compose | `web` (Gunicorn + Flask) and `api` (Uvicorn + FastAPI) as separate containers | `5001` / `8001` |
-| Production / GHCR | Single Uvicorn process: FastAPI + Flask via `WSGIMiddleware` | Render `$PORT` |
+| Environment | Process | What it serves | Port |
+| --- | --- | --- | --- |
+| Local Compose `web` | Gunicorn + Flask | HTML UI, sync v1 API, `/health`, `/metrics`, `/apidocs`, `/api/ping` | `5001` |
+| Local Compose `api` | Uvicorn + FastAPI + Flask via `WSGIMiddleware` | Everything on `web` **plus** `/api/v2/*`, `/v2/docs`, `/v2/redoc` | `8001` |
+| Production / GHCR | Same as local `api` | Combined stack | Render `$PORT` |

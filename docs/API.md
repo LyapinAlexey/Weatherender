@@ -7,7 +7,15 @@ Weatherender exposes a dual-stack JSON REST API alongside its server-rendered we
 
 Base URL (production): `https://weather-7icc.onrender.com`
 
-Local (Docker Compose): Flask on `http://localhost:5001`, FastAPI v2 on `http://localhost:8001`.
+Local (Docker Compose):
+
+| Host | Process | What it serves |
+| --- | --- | --- |
+| `http://localhost:5001` | `web` — Gunicorn + Flask only | HTML UI, sync v1 API (`/api/weather`), `/health`, `/metrics`, `/apidocs`, `/api/ping`. **No** FastAPI v2. |
+| `http://localhost:8001` | `api` — Uvicorn + FastAPI, Flask mounted via `WSGIMiddleware` | Async v2 (`/api/v2/*`, `/v2/docs`) **and** the full Flask stack above. This is the production-shaped process. |
+
+On Render there is a single `$PORT`; it behaves like `:8001`.
+
 
 ---
 
@@ -45,11 +53,14 @@ High-performance asynchronous endpoint powered by **FastAPI**, **Pydantic v2**, 
 curl "https://weather-7icc.onrender.com/api/v2/weather?city=Berlin"
 ```
 
-Local:
+Local (v2 lives only on the API process):
 
 ```bash
 curl "http://localhost:8001/api/v2/weather?city=Berlin"
 ```
+
+This will **not** work on `:5001`.
+
 
 **Responses**
 
@@ -115,11 +126,13 @@ Returns current conditions and a 3-day forecast for a given city via the legacy 
 curl "https://weather-7icc.onrender.com/api/weather?city=Berlin"
 ```
 
-Local:
+Local (Flask-only container **or** the combined API process):
 
 ```bash
 curl "http://localhost:5001/api/weather?city=Berlin"
+curl "http://localhost:8001/api/weather?city=Berlin"
 ```
+
 
 **Responses**
 

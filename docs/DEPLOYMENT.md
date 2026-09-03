@@ -85,7 +85,13 @@ CMD uvicorn weatherender.API.main:app --host 0.0.0.0 --port ${PORT} --workers 4
 
 ### Why one image serves both stacks
 
-`WEB/` and `API/` remain two separate packages with two separate `Dockerfile`s, built independently by `docker-compose` for local development (two containers, two ports: **5001** and **8001**). But Render's free tier only supports one active web service without added cost, so for production, `weatherender.API.main` imports the Flask app object (`from weatherender.WEB.app import app as flask_app`) and mounts it under FastAPI via `a2wsgi.WSGIMiddleware`, exposing both the async v2 API and the full legacy v1 Flask app (including the HTML UI, `/health`, `/metrics`, `/apidocs`) from a single `uvicorn` process. Locally, both containers still exist side-by-side for isolated development and testing; only the Render deployment target changed.
+`WEB/` and `API/` remain two separate packages with two separate `Dockerfile`s, built independently by `docker-compose` for local development.
+
+- **`:5001` (`web`)** — Gunicorn + Flask only. HTML UI and sync v1 API. No FastAPI.
+- **`:8001` (`api`)** — Uvicorn + FastAPI with Flask mounted via `a2wsgi.WSGIMiddleware`. Async v2 **and** the full Flask stack (UI, `/api/weather`, `/health`, `/metrics`, `/apidocs`). This is the production-shaped process.
+
+Render's free tier only supports one active web service, so production deploys the `api` image only. `weatherender.API.main` imports the Flask app (`from weatherender.WEB.app import app as flask_app`) and mounts it under FastAPI, exposing both stacks from a single `uvicorn` process. Locally both containers still run side-by-side so you can develop Flask in isolation on `:5001`; production traffic always hits the combined process.
+
 
 This also drove two related fixes documented in the CHANGELOG: `API/schemas.py` was renamed to `API/pydantic_schemas.py` (a bare `import schemas` was resolving to the Marshmallow schema once both packages shared `sys.path`), and both Dockerfiles switched from per-file `COPY` to `COPY . /app/` with a shared root `.dockerignore`, since the API image now needs the entire `WEB/` package tree, not just its own flat file list. After the `src/` layout move, `CMD` paths became `weatherender.WEB.app:app` and `weatherender.API.main:app`.
 
@@ -139,13 +145,14 @@ See the [Quick Start](../README.md#quick-start-docker) section in the README for
 
 Local ports (from `.env.example`):
 
-| Service | Host port |
-| --- | --- |
-| Flask web | `5001` (`FLASK_PORT`) |
-| FastAPI v2 | `8001` (`API_PORT`) |
-| PostgreSQL | `5432` |
-| Redis | `6379` |
-| Test PostgreSQL | `5433` |
+| Service | Host port | Serves |
+| --- | --- | --- |
+| Flask `web` | `5001` (`FLASK_PORT`) | Flask only: UI + sync API |
+| Combined `api` | `8001` (`API_PORT`) | FastAPI v2 **and** Flask (same as production) |
+| PostgreSQL | `5432` | — |
+| Redis | `6379` | — |
+| Test PostgreSQL | `5433` | — |
+
 
 `docker-compose.yml` maps host ports with `${FLASK_PORT}:${FLASK_PORT}` and `${API_PORT}:${API_PORT}`. The Dockerfiles bind Gunicorn/Uvicorn to the same `PORT` value (`5001` / `8001`). These need to agree — if they mismatch, the port mapping and the actual bound port will not line up.
 
