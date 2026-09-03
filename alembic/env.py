@@ -5,11 +5,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from logging.config import fileConfig
 
-from config import Config
-from models import Base
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from src.weatherender.config import Config
+from src.weatherender.models import Base
 
 assert Config.DATABASE_URL is not None
 config = context.config

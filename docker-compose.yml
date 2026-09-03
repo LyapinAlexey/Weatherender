@@ -2,7 +2,7 @@ services:
   weather_db:
     image: postgres:16
     ports:
-      - "5432:5432"
+      - "5435:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
@@ -17,7 +17,7 @@ services:
   cache:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -26,7 +26,7 @@ services:
   migration:
     build:
       context: .
-      dockerfile: WEB/Dockerfile
+      dockerfile: src/weatherender/WEB/Dockerfile
     command: alembic upgrade head
     env_file: .env
     depends_on:
@@ -34,10 +34,11 @@ services:
         condition: service_healthy
       cache:
         condition: service_healthy
+    restart: on-failure
   web:
     build:
       context: .
-      dockerfile: WEB/Dockerfile
+      dockerfile: src/weatherender/WEB/Dockerfile
     ports:
       - "${FLASK_PORT}:${FLASK_PORT}"
     env_file: .env
@@ -51,7 +52,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: API/Dockerfile
+      dockerfile: src/weatherender/API/Dockerfile
     ports:
       - "${API_PORT}:${API_PORT}"
     env_file: .env
@@ -65,7 +66,7 @@ services:
   weather_test_db:
     image: postgres:16
     ports:
-      - "5433:5432"
+      - "5436:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_TEST_USER}
       - POSTGRES_PASSWORD=${POSTGRES_TEST_PASSWORD}
@@ -73,7 +74,7 @@ services:
   cli:
     build:
       context: .
-      dockerfile: CLI/Dockerfile
+      dockerfile: src/weatherender/CLI/Dockerfile
     env_file: .env
     depends_on:
       weather_db:
