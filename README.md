@@ -257,7 +257,6 @@ The installable package lives under `src/weatherender/`:
 src/weatherender/
 ├── WEB/          # Flask UI + v1 JSON API (Compose `web`, port 5001 — Flask only)
 ├── API/          # FastAPI v2 + mounted Flask (Compose `api` / Render / GHCR, port 8001)
-
 ├── CLI/          # console script: weatherender
 ├── config.py
 ├── models.py
@@ -272,7 +271,7 @@ Locally, Compose runs `web` (port **5001**, Flask only) and `api` (port **8001**
 
 Full breakdown, component responsibilities, and request/data flow diagrams: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-![Project architecture](docs/architecture.svg)
+![Project architecture](./docs/architecture.svg)
 
 ## Engineering Challenges & Bug Investigations
 
