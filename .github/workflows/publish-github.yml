@@ -1,34 +1,16 @@
-name: Docker Build & Publish
+- name: Log in to GitHub Container Registry
+  uses: docker/login-action@v3
+  with:
+    registry: ghcr.io
+    username: ${{ github.actor }}
+    password: ${{ secrets.GITHUB_TOKEN }}
 
-on:
-  release:
-    types: [published]
-  push:
-    branches: [main]
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: src/weatherender/API/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/weatherender-foundation/weatherender-api:latest
-            ghcr.io/weatherender-foundation/weatherender-api:${{ github.sha }}
+- name: Build and push Docker image
+  uses: docker/build-push-action@v5
+  with:
+    context: .
+    file: src/weatherender/API/Dockerfile
+    push: true
+    tags: |
+      ghcr.io/weatherender-foundation/weatherender-api:latest
+      ghcr.io/weatherender-foundation/weatherender-api:${{ github.sha }}
