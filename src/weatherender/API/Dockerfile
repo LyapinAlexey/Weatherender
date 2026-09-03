@@ -5,7 +5,10 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 RUN pip install -e .
-ENV PORT=8002
+ENV PORT=8001
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
   CMD curl -f http://localhost:${PORT}/api/v2/health || exit 1
-CMD uvicorn src.weatherrender.API.main:app --host 0.0.0.0 --port ${PORT} --workers 4
+CMD uvicorn weatherender.API.main:app \
+    --host 0.0.0.0 \
+    --port ${PORT} \
+    --workers 4
