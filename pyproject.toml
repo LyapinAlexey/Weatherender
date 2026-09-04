@@ -8,15 +8,30 @@ version = "2.0.0"
 description = "Production-grade weather intelligence for skiers"
 readme = "README.md"
 authors = [{ name = "Alexey Lyapin", email = "lehacomp16@gmail.com" }]
-license = { text = "SSCI Custom License v1.1" }
+license = { file = "LICENSE" }
 requires-python = ">=3.13"
 dynamic = ["dependencies"]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
 
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
 [project.scripts]
 weatherender = "weatherender.CLI.main:main"
+
+[project.urls]
+Homepage = "https://github.com/Weatherender-foundation/Weatherender"
+Repository = "https://github.com/Weatherender-foundation/Weatherender"
+Documentation = "https://github.com/Weatherender-foundation/Weatherender/blob/main/docs/API.md"
+Issues = "https://github.com/Weatherender-foundation/Weatherender/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

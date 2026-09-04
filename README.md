@@ -313,15 +313,13 @@ I also write about the engineering side of this project on my [Habr profile](htt
 
 ## License
 
-This project is licensed under the **SSCI Custom License v1.1**.
+This project is licensed under the **SSCI Custom License v1.2**.
 
-Non-commercial use is allowed with mandatory attribution.
-Commercial use of any part of this project (including code, algorithms, formulas,
-models, API, or documentation) is strictly prohibited without explicit written
-permission from the author.
-
+> 🛡️ **License:** Non-Commercial Use Only
+> You may download and use this package for **personal, educational, or non-commercial purposes**.
+> **Commercial use (selling, SaaS, monetization) is strictly prohibited** without written permission.
 Full license text:
-[SSCI Custom License v1.1](./LICENSE)
+[SSCI Custom License v1.2](./LICENSE)
 
 For commercial licensing inquiries, contact:
 
