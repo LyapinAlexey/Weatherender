@@ -69,6 +69,76 @@ including all future versions and updates.
    This work is provided "as is" without warranty of any kind. The author is not
    liable for any damages arising from the use of this work.
 
-10. Contact for Commercial Licensing
+SSCI Custom License v1.2
+© 2026 Alexey Lyapin (Alexey Lyapin)
+Contact: lehacomp16@gmail.com
+Project: Weatherender / SSCI — Snow Surface Condition Index
+
+This license applies to all files, code, algorithms, formulas, models, data,
+API endpoints, documentation, and any other content contained in this repository
+and its PyPI package, including all future versions and updates.
+
+---
+
+1. GRANT OF PERMISSION (FOR NON-COMMERCIAL USE ONLY)
+   Permission is granted to any person or organization to download, view, copy,
+   modify, and use this work for non-commercial purposes only, provided that:
+   - all copies retain this license,
+   - all modifications are clearly documented,
+   - the original author is credited as required in Section 2.
+
+2. MANDATORY ATTRIBUTION
+   Any use of this work (including modified versions) must include clear and
+   visible attribution to the original author:
+   "SSCI / Weatherender by Alexey Lyapin"
+   with a functioning link to the original repository:
+   https://github.com/Weatherender-foundation/Weatherender
+
+3. DERIVATIVE WORKS
+   If you modify or build upon this work, you must:
+   - clearly state that the work is based on the SSCI model,
+   - include this license in full with your derivative,
+   - not use the SSCI name or branding to promote your derivative.
+
+4. COMMERCIAL USE — STRICTLY PROHIBITED
+   Commercial use of this work, or any derivative of it, is strictly forbidden
+   without explicit written permission from the author.
+
+   "Commercial use" means any activity that generates revenue, profit,
+   or commercial advantage, including but not limited to:
+   - selling, renting, or sublicensing the software,
+   - using it in a paid service, SaaS, or subscription platform,
+   - integrating it into a product that is sold or monetized,
+   - using it for internal business operations that support revenue generation,
+   - using it in advertising, marketing, or promotional materials,
+   - using it as part of a paid API or backend service,
+   - using it in a mobile or web application that charges users or displays paid ads.
+
+   Without explicit written permission from the author, any such use is illegal
+   and constitutes a violation of this license.
+
+5. NO REMOVAL OF ATTRIBUTION
+   You may not remove, alter, hide, or obscure the author's name, copyright notice,
+   license text, or any reference to the SSCI / Weatherender project.
+
+6. NO SUBLICENSING
+   You may not grant any commercial rights to third parties. Only the author
+   may issue commercial licenses.
+
+7. REVERSE ENGINEERING PROHIBITED
+   You may not reverse engineer, extract, or replicate the underlying algorithm
+   or model for the purpose of creating a competing commercial product.
+
+8. AI AND MODEL TRAINING RESTRICTIONS
+   This work may not be used to train AI models, machine learning systems,
+   or automated code generation tools without explicit written permission.
+
+9. NO WARRANTY
+   This work is provided "as is" without warranty of any kind. The author is not
+   liable for any damages arising from its use.
+
+10. CONTACT FOR COMMERCIAL LICENSING
     For commercial licensing inquiries, contact:
-    Email: lehacomp16@gmail.com
+    Alexey Lyapin — lehacomp16@gmail.com
+
+    Commercial licenses may be granted at the author's sole discretion.
